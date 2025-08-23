@@ -1,0 +1,134 @@
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Header */
+header {
+  background: #111;
+  color: #fff;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header nav a {
+  color: #fff;
+  text-decoration: none;
+  margin: 0 1rem;
+}
+
+header nav a:hover {
+  text-decoration: underline;
+}
+
+/* Hero */
+.hero {
+  width: 100%; /* stretch across screen */
+  min-height: 100vh; /* full screen height */
+  background: linear-gradient(to right, #667eea, #764ba2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+/* Sections */
+section {
+  padding: 4rem 2rem;
+  max-width: 1000px;
+  margin: auto;
+}
+
+section h2 {
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  color: #222;
+}
+
+/* Footer */
+footer {
+  background: #111;
+  color: #fff;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Default styles = Desktop-first */
+
+/* 📱 Mobile devices (max 600px) */
+@media (max-width: 600px) {
+  header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  header nav {
+    margin-top: 1rem;
+  }
+
+  header nav a {
+    display: block;
+    margin: 0.5rem 0;
+  }
+
+  .hero {
+    padding: 2rem 1rem;
+    height: auto; /* prevent overflow */
+  }
+
+  section {
+    padding: 2rem 1rem;
+  }
+}
+
+/* 📱 Tablets (600px – 900px) */
+@media (max-width: 900px) {
+  body {
+    font-size: 0.95rem; /* slightly smaller text */
+  }
+
+  header {
+    padding: 1rem;
+  }
+
+  .hero h2 {
+    font-size: 1.8rem;
+  }
+}
+
+/* 💻 Large screens (1200px and above) */
+@media (min-width: 1200px) {
+  section {
+    max-width: 1200px; /* widen content on big screens */
+  }
+}
+
+.hero img {
+  max-width: 200px; /* keeps it small on large screens */
+  width: 100%; /* makes it shrink on smaller screens */
+  height: auto; /* keeps aspect ratio */
+  display: block;
+  margin: 0 auto 1rem auto;
+  transform: scale(1.5);
+}
