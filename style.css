@@ -132,3 +132,42 @@ footer {
   margin: 0 auto 1rem auto;
   transform: scale(1.5);
 }
+
+/* Dark Mode */
+.dark-mode {
+  background-color: #121212; /* dark background */
+  color: #f5f5f5; /* light text */
+}
+
+.dark-mode header {
+  background: #1e1e1e;
+}
+
+.dark-mode header nav a {
+  color: #f5f5f5;
+}
+
+.dark-mode section h2 {
+  color: #fff;
+}
+
+.dark-mode footer {
+  background: #1e1e1e;
+  color: #aaa;
+}
+
+/* Dark mode toggle button */
+.dark-toggle {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-right: 1rem;
+  transition: transform 0.2s ease, color 0.3s ease;
+}
+
+.dark-toggle:hover {
+  transform: scale(1.2);
+  color: #ccc;
+}
