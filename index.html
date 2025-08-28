@@ -4,61 +4,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Portfolio</title>
+    <title>Sravan</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 </head>
 
 <body>
+    <div class="noise-bg"></div>
 
+    <!-- Navigation -->
+    <nav class="nav">
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#portfolio">Projects</a></li>
+            <li><a href="#contacts">Contact</a></li>
+        </ul>
+    </nav>
 
-    <!-- Header / Navbar -->
-    <header>
-        <button id="darkToggle" class="dark-toggle">🌙</button>
-        <h1></h1>
-        <nav>
-            <a href="#about">About</a>
-            <a href="#projects">Projects</a>
-            <a href="#contact">Contact</a>
-        </nav>
-    </header>
+    <!-- Logo -->
+    <div class="logo">SK</div>
+
+    <!-- Social Links -->
+    <div class="social">
+        <a href="#" title="LinkedIn">💼</a>
+        <a href="#" title="Behance">🎨</a>
+        <a href="#" title="Dribbble">🏀</a>
+        <a href="#" title="Instagram">📷</a>
+    </div>
 
     <!-- Hero Section -->
-    <section class="hero" id="home">
-        <img src="download__4_-removebg-preview.png ">
-        <h2>Hi, I'm Sravan</h2>
-        <p>Aspiring Full Stack Developer | MERN Stack Enthusiast</p>
+    <section id="home" class="section hero">
+        <div class="container">
+            <div class="hero-subtitle">Software Developer</div>
+            <h1 class="hero-title">SRAVAN</h1>
+            <div class="hero-description">Software Developer</div>
+        </div>
     </section>
 
-    <!-- About Section -->
-    <section id="about">
-        <h2>About Me</h2>
-        <p>Write a short intro about yourself here. Highlight your passion, skills, and goals.</p>
+    <!-- Tech Stack Section -->
+    <section class="tech-stack-section">
+        <div class="container">
+            <div class="tech-stack-header fade-in">
+                <h2 class="tech-stack-title">TECH STACK</h2>
+                <p class="tech-stack-subtitle">Technologies I Work With</p>
+            </div>
+
+            <div class="tech-stack-slider">
+                <div class="tech-stack-track">
+                    <!-- First set of technologies -->
+                    <div class="tech-item">
+                        <div class="tech-icon">⚛️</div>
+                        <span class="tech-name">React</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">📱</div>
+                        <span class="tech-name">React Native</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🟢</div>
+                        <span class="tech-name">Node.js</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🐍</div>
+                        <span class="tech-name">Python</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">💎</div>
+                        <span class="tech-name">TypeScript</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🎨</div>
+                        <span class="tech-name">Figma</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">⚡</div>
+                        <span class="tech-name">Next.js</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">💨</div>
+                        <span class="tech-name">Tailwind</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🗄️</div>
+                        <span class="tech-name">MongoDB</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🔥</div>
+                        <span class="tech-name">Firebase</span>
+                    </div>
+
+                    <!-- Duplicate set for seamless loop -->
+                    <div class="tech-item">
+                        <div class="tech-icon">⚛️</div>
+                        <span class="tech-name">React</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">📱</div>
+                        <span class="tech-name">React Native</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🟢</div>
+                        <span class="tech-name">Node.js</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🐍</div>
+                        <span class="tech-name">Python</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">💎</div>
+                        <span class="tech-name">TypeScript</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🎨</div>
+                        <span class="tech-name">Figma</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">⚡</div>
+                        <span class="tech-name">Next.js</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">💨</div>
+                        <span class="tech-name">Tailwind</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🗄️</div>
+                        <span class="tech-name">MongoDB</span>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🔥</div>
+                        <span class="tech-name">Firebase</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <!-- Projects Section -->
-    <section id="projects">
-        <h2>Projects</h2>
-        <p>Showcase some of your best work here.</p>
-        <ul>
-            <li>Project 1 - <a href="#">Link</a></li>
-            <li>Project 2 - <a href="#">Link</a></li>
-            <li>Project 3 - <a href="#">Link</a></li>
-        </ul>
+    <!-- Portfolio Section -->
+    <section id="portfolio" class="section portfolio">
+        <div class="container">
+            <div class="portfolio-header fade-in">
+                <h2 class="portfolio-title">MY PORTFOLIO</h2>
+                <p class="portfolio-subtitle">Selected Works from Recent Projects</p>
+            </div>
+
+            <div class="portfolio-grid">
+                <div class="portfolio-item fade-in">
+                    <div class="portfolio-image">
+                        <div class="portfolio-image-placeholder">👁️</div>
+                    </div>
+                    <div class="portfolio-content">
+                        <h3>Mobile App Design</h3>
+                        <p>A sleek mobile application design focusing on user experience and modern interface patterns.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="portfolio-item fade-in">
+                    <div class="portfolio-image">
+                        <div class="portfolio-image-placeholder">💻</div>
+                    </div>
+                    <div class="portfolio-content">
+                        <h3>Web Platform</h3>
+                        <p>Comprehensive web platform design with emphasis on usability and conversion optimization.</p>
+                    </div>
+                </div>
+
+                <div class="portfolio-item fade-in">
+                    <div class="portfolio-image">
+                        <div class="portfolio-image-placeholder">🎨</div>
+                    </div>
+                    <div class="portfolio-content">
+                        <h3>Brand Identity</h3>
+                        <p>Complete brand identity design including logo, color palette, and visual guidelines.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="#" class="view-portfolio-btn fade-in">View Portfolio</a>
+            </div>
+        </div>
     </section>
 
     <!-- Contact Section -->
-    <section id="contact">
-        <h2>Contact</h2>
-        <p>Get in touch with me via email or social media.</p>
-        <p>Email: <a href="mailto:sravan.kriz27@gmail.com">sravan.kriz27@gmail.com</a></p>
+    <section id="contact" class="section contact">
+        <div class="container">
+            <div class="contact-content">
+                <div class="contact-info">
+                    <h2 class="fade-in">CONTACT</h2>
+                    <p class="contact-text fade-in">Let's bring your creative ideas to life. Get in touch and let's
+                        discuss how we can work together to create something amazing.</p>
+
+                    <div class="contact-details">
+                        <div class="contact-detail fade-in">
+                            <h4>Address</h4>
+                            <p>Your Address Here<br>City, State 12345</p>
+                        </div>
+
+                        <div class="contact-detail fade-in">
+                            <h4>E-mail</h4>
+                            <p>your.email@domain.com</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-form fade-in">
+                    <h3>CONTACT FORM</h3>
+                    <form>
+                        <div class="form-group">
+                            <input type="text" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" placeholder="Subject" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea placeholder="Your Message" required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- Footer -->
-    <footer>
-        <p>&copy; 2025 Your Name | All Rights Reserved</p>
+    <footer class="footer">
+        <div class="container">
+            <p>Thanks for watching</p>
+        </div>
     </footer>
 
     <script src="script.js"></script>
