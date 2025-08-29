@@ -1,40 +1,22 @@
-.tech-stack-track {
-  animation: scroll 30s linear infinite; /* Faster */
-}
-
-/* Change hover effects */
-.tech-item:hover {
-  background: rgba(your-color, 0.1);
-  border-color: rgba(your-color, 0.3);
-}
-The section is now positioned between your hero and portfolio sections,
-creating
-  a
-  natural
-  flow
-  that
-  showcases
-  your
-  technical
-  expertise
-  with
-  an
-  engaging
-  animated
-  display!
-  :root {
+:root {
   --accent-light: #bfa3ff; /* lilac */
   --accent-main: #9a4dff; /* violet */
   --accent-dark: #6d1dff; /* deep violet */
-  --background: #ffffff;
-  --surface: #f5f5f7; /* very light grey */
-  --text: #111;
+  --background: #0a0a0a;
+  --surface: #111;
+  --text: #ffffff;
+  --text-muted: #888;
+  --border: rgba(255, 255, 255, 0.1);
+  --form-bg: #0a0a0a;
 }
 
-[data-theme="dark"] {
-  --background: #111;
-  --surface: #1c1c1e;
-  --text: #eee;
+[data-theme="light"] {
+  --background: #ffffff;
+  --surface: #f8f9fa;
+  --text: #1a1a1a;
+  --text-muted: #666666;
+  --border: rgba(0, 0, 0, 0.1);
+  --form-bg: #ffffff;
 }
 
 /* Reset and Base Styles */
@@ -46,9 +28,10 @@ creating
 
 body {
   font-family: "Arial", sans-serif;
-  background: #0a0a0a;
-  color: #ffffff;
+  background: var(--background);
+  color: var(--text);
   overflow-x: hidden;
+  transition: all 0.3s ease;
 }
 
 .noise-bg {
@@ -77,6 +60,43 @@ body {
   position: relative;
 }
 
+/* Theme Toggle */
+.theme-toggle {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  width: 60px;
+  height: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+}
+
+[data-theme="light"] .theme-toggle {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.theme-toggle::before {
+  content: "";
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-main);
+  transition: all 0.3s ease;
+  transform: translateX(0);
+}
+
+[data-theme="light"] .theme-toggle::before {
+  transform: translateX(26px);
+}
+
 /* Navigation */
 .nav {
   position: fixed;
@@ -88,19 +108,23 @@ body {
   backdrop-filter: blur(10px);
   padding: 15px 30px;
   border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+[data-theme="light"] .nav {
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .nav-links {
   display: flex;
   gap: 30px;
   list-style: none;
-
   padding: 0px 0px 0px 0px;
 }
 
 .nav-links a {
-  color: #ffffff;
+  color: var(--text);
   text-decoration: none;
   font-size: 14px;
   font-weight: 300;
@@ -110,7 +134,7 @@ body {
 }
 
 .nav-links a:hover {
-  color: #ff6b6b;
+  color: var(--accent-main);
 }
 
 /* Logo */
@@ -121,7 +145,8 @@ body {
   z-index: 1000;
   font-size: 24px;
   font-weight: bold;
-  color: #ffffff;
+  color: var(--text);
+  transition: color 0.3s ease;
 }
 
 /* Social Links */
@@ -136,18 +161,16 @@ body {
 }
 
 .social a {
-  color: #666;
+  color: var(--text-muted);
   text-decoration: none;
   font-size: 18px;
   transition: all 0.3s ease;
 }
 
 .social a:hover {
-  color: #ff6b6b;
+  color: var(--accent-main);
   transform: translateX(5px);
 }
-
-/* Hero Section */
 
 /* Hero Section */
 .hero {
@@ -181,7 +204,7 @@ body {
   font-size: 14px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 20px;
   opacity: 0;
   animation: fadeInUp 1s ease 0.5s forwards;
@@ -199,7 +222,7 @@ body {
 
 .hero-description {
   font-size: 16px;
-  color: #888;
+  color: var(--text-muted);
   letter-spacing: 1px;
   text-transform: uppercase;
   opacity: 0;
@@ -209,9 +232,14 @@ body {
 /* Tech Stack Section */
 .tech-stack-section {
   padding: 100px 0;
-  background: linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(
+    135deg,
+    var(--background) 0%,
+    var(--surface) 50%,
+    var(--background) 100%
+  );
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   overflow: hidden;
 }
 
@@ -225,7 +253,7 @@ body {
   font-weight: 900;
   letter-spacing: -2px;
   margin-bottom: 20px;
-  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  background: linear-gradient(135deg, var(--accent-main), var(--accent-light));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -233,7 +261,7 @@ body {
 
 .tech-stack-subtitle {
   font-size: 14px;
-  color: #888;
+  color: var(--text-muted);
   letter-spacing: 2px;
   text-transform: uppercase;
 }
@@ -257,17 +285,17 @@ body {
 
 .tech-stack-slider::before {
   left: 0;
-  background: linear-gradient(90deg, #0a0a0a 0%, transparent 100%);
+  background: linear-gradient(90deg, var(--background) 0%, transparent 100%);
 }
 
 .tech-stack-slider::after {
   right: 0;
-  background: linear-gradient(-90deg, #0a0a0a 0%, transparent 100%);
+  background: linear-gradient(-90deg, var(--background) 0%, transparent 100%);
 }
 
 .tech-stack-track {
   display: flex;
-  animation: scroll 40s linear infinite;
+  animation: scroll 30s linear infinite;
   gap: 40px;
   padding: 20px 0;
 }
@@ -278,16 +306,16 @@ body {
   align-items: center;
   min-width: 120px;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(154, 77, 255, 0.05);
+  border: 1px solid var(--border);
   border-radius: 15px;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
 }
 
 .tech-item:hover {
-  background: rgba(255, 107, 107, 0.1);
-  border-color: rgba(255, 107, 107, 0.3);
+  background: rgba(154, 77, 255, 0.15);
+  border-color: var(--accent-light);
   transform: translateY(-10px);
 }
 
@@ -308,13 +336,13 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #888;
+  color: var(--text-muted);
   text-align: center;
   transition: color 0.3s ease;
 }
 
 .tech-item:hover .tech-name {
-  color: #ffffff;
+  color: var(--text);
 }
 
 @keyframes scroll {
@@ -326,14 +354,10 @@ body {
   }
 }
 
-/* Pause animation on hover */
-.tech-stack-slider:hover .tech-stack-track {
-  animation-play-state: paused;
-}
-
 /* Portfolio Section */
 .portfolio {
   padding: 100px 0;
+  position: relative;
 }
 
 .portfolio-header {
@@ -350,7 +374,7 @@ body {
 
 .portfolio-subtitle {
   font-size: 14px;
-  color: #888;
+  color: var(--text-muted);
   letter-spacing: 2px;
   text-transform: uppercase;
 }
@@ -363,23 +387,23 @@ body {
 }
 
 .portfolio-item {
-  background: #111;
+  background: var(--surface);
   border-radius: 10px;
   overflow: hidden;
   transition: all 0.5s ease;
   cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
 }
 
 .portfolio-item:hover {
   transform: translateY(-10px);
-  border-color: rgba(255, 107, 107, 0.3);
+  border-color: var(--accent-light);
 }
 
 .portfolio-image {
   width: 100%;
   height: 250px;
-  background: linear-gradient(135deg, #333, #111);
+  background: linear-gradient(135deg, var(--accent-main), var(--accent-dark));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -399,7 +423,7 @@ body {
 
 .portfolio-image-placeholder {
   font-size: 48px;
-  color: #333;
+  color: rgba(255, 255, 255, 0.7);
   z-index: 1;
 }
 
@@ -414,13 +438,13 @@ body {
 }
 
 .portfolio-content p {
-  color: #888;
+  color: var(--text-muted);
   font-size: 14px;
   line-height: 1.5;
 }
 
 .view-portfolio-btn {
-  background: #ff6b6b;
+  background: var(--accent-main);
   color: #ffffff;
   border: none;
   padding: 15px 40px;
@@ -436,13 +460,14 @@ body {
 }
 
 .view-portfolio-btn:hover {
-  background: #ff5252;
+  background: var(--accent-dark);
   transform: translateY(-2px);
 }
 
 /* Contact Section */
 .contact {
   padding: 100px 0;
+  position: relative;
 }
 
 .contact-content {
@@ -460,7 +485,7 @@ body {
 }
 
 .contact-text {
-  color: #888;
+  color: var(--text-muted);
   line-height: 1.6;
   margin-bottom: 40px;
 }
@@ -474,7 +499,7 @@ body {
 }
 
 .contact-detail h4 {
-  color: #ffffff;
+  color: var(--text);
   font-size: 14px;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -482,15 +507,15 @@ body {
 }
 
 .contact-detail p {
-  color: #888;
+  color: var(--text-muted);
   font-size: 16px;
 }
 
 .contact-form {
-  background: #111;
+  background: var(--surface);
   padding: 40px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
 }
 
 .contact-form h3 {
@@ -506,11 +531,11 @@ body {
 .form-group input,
 .form-group textarea {
   width: 100%;
-  background: #0a0a0a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--form-bg);
+  border: 1px solid var(--border);
   border-radius: 5px;
   padding: 15px;
-  color: #ffffff;
+  color: var(--text);
   font-size: 14px;
   transition: all 0.3s ease;
 }
@@ -518,7 +543,7 @@ body {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #ff6b6b;
+  border-color: var(--accent-main);
 }
 
 .form-group textarea {
@@ -527,7 +552,7 @@ body {
 }
 
 .submit-btn {
-  background: #ff6b6b;
+  background: var(--accent-main);
   color: #ffffff;
   border: none;
   padding: 15px 40px;
@@ -542,14 +567,14 @@ body {
 }
 
 .submit-btn:hover {
-  background: #ff5252;
+  background: var(--accent-dark);
 }
 
 /* Footer */
 .footer {
   text-align: center;
   padding: 50px 0;
-  color: #666;
+  color: var(--text-muted);
   font-size: 14px;
 }
 
@@ -576,8 +601,35 @@ body {
   transform: translateY(0);
 }
 
+/* Cursor Interactivity */
+.cursor-interactive {
+  cursor: none;
+}
+
+.custom-cursor {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  background: var(--accent-main);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.1s ease;
+  mix-blend-mode: difference;
+}
+
+.custom-cursor.hover {
+  transform: scale(2);
+  background: var(--accent-light);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
+  .theme-toggle {
+    top: 20px;
+    right: 20px;
+  }
+
   .nav {
     padding: 10px 20px;
   }

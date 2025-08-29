@@ -5,19 +5,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sravan</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" type='text/css' href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+
 </head>
 
 <body>
     <div class="noise-bg"></div>
+    <div class="custom-cursor"></div>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle" id="themeToggle"></div>
 
     <!-- Navigation -->
     <nav class="nav">
         <ul class="nav-links">
             <li><a href="#home">Home</a></li>
             <li><a href="#portfolio">Projects</a></li>
-            <li><a href="#contacts">Contact</a></li>
+            <li><a href="#contact">Contact</a></li>
         </ul>
     </nav>
 
@@ -157,7 +163,8 @@
     </section>
 
     <!-- Portfolio Section -->
-    <section id="portfolio" class="section portfolio">
+
+    <section id="portfolio" class="section portfolio cursor-interactive">
         <div class="container">
             <div class="portfolio-header fade-in">
                 <h2 class="portfolio-title">MY PORTFOLIO</h2>
@@ -167,9 +174,7 @@
             <div class="portfolio-grid">
                 <div class="portfolio-item fade-in">
                     <div class="portfolio-image">
-                        <div class="portfolio-image-placeholder">
-                            <img="https: //i.pinimg.com/736x/72/b7/6c/72b76c2232fd31287dac94f37a3da215.jpg" alt="sid">
-                        </div>
+                        <div class="portfolio-image-placeholder">📱</div>
                     </div>
                     <div class="portfolio-content">
                         <h3>Mobile App Design</h3>
@@ -206,7 +211,7 @@
     </section>
 
     <!-- Contact Section -->
-    <section id="contact" class="section contact">
+    <section id="contact" class="section contact cursor-interactive">
         <div class="container">
             <div class="contact-content">
                 <div class="contact-info">
@@ -256,7 +261,8 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+
+
 </body>
 
 </html>

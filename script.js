@@ -1,3 +1,75 @@
+// Theme Toggle Functionality
+const themeToggle = document.getElementById("themeToggle");
+const body = document.body;
+
+// Check for saved theme preference
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme) {
+  body.setAttribute("data-theme", savedTheme);
+}
+
+themeToggle.addEventListener("click", () => {
+  const currentTheme = body.getAttribute("data-theme");
+  const newTheme = currentTheme === "light" ? "dark" : "light";
+
+  body.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
+});
+
+// Custom Cursor
+const cursor = document.querySelector(".custom-cursor");
+const interactiveSections = document.querySelectorAll(".cursor-interactive");
+
+let mouseX = 0;
+let mouseY = 0;
+let cursorX = 0;
+let cursorY = 0;
+
+// Update mouse position
+document.addEventListener("mousemove", (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
+
+// Smooth cursor animation
+function animateCursor() {
+  cursorX += (mouseX - cursorX) * 0.1;
+  cursorY += (mouseY - cursorY) * 0.1;
+  cursor.style.left = cursorX + "px";
+  cursor.style.top = cursorY + "px";
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+// Show/hide cursor in interactive sections
+interactiveSections.forEach((section) => {
+  section.addEventListener("mouseenter", () => {
+    cursor.style.opacity = "1";
+    section.style.cursor = "none";
+  });
+
+  section.addEventListener("mouseleave", () => {
+    cursor.style.opacity = "0";
+    section.style.cursor = "auto";
+    cursor.classList.remove("hover");
+  });
+});
+
+// Hover effects for interactive elements
+document
+  .querySelectorAll(
+    ".portfolio-item, .contact-form, .view-portfolio-btn, .submit-btn"
+  )
+  .forEach((item) => {
+    item.addEventListener("mouseenter", () => {
+      cursor.classList.add("hover");
+    });
+
+    item.addEventListener("mouseleave", () => {
+      cursor.classList.remove("hover");
+    });
+  });
+
 // Tech Stack Animation Control
 const techStackTrack = document.querySelector(".tech-stack-track");
 const techStackSection = document.querySelector(".tech-stack-section");
@@ -9,7 +81,7 @@ if (techStackSection && techStackTrack) {
   });
 
   techStackSection.addEventListener("mouseleave", () => {
-    techStackTrack.style.animationDuration = "40s"; // Normal speed
+    techStackTrack.style.animationDuration = "30s"; // Normal speed
   });
 }
 
@@ -69,7 +141,7 @@ document.querySelectorAll(".fade-in").forEach((el) => {
 document.querySelectorAll(".portfolio-item").forEach((item) => {
   item.addEventListener("mouseenter", function () {
     this.style.transform = "translateY(-10px) scale(1.02)";
-    this.style.boxShadow = "0 20px 40px rgba(255, 107, 107, 0.1)";
+    this.style.boxShadow = "0 20px 40px rgba(154, 77, 255, 0.15)";
   });
 
   item.addEventListener("mouseleave", function () {
@@ -79,7 +151,6 @@ document.querySelectorAll(".portfolio-item").forEach((item) => {
 
   // Add click event for portfolio items
   item.addEventListener("click", function () {
-    // You can add navigation to individual project pages here
     console.log(
       "Portfolio item clicked:",
       this.querySelector("h3").textContent
@@ -92,7 +163,6 @@ document.querySelector("form").addEventListener("submit", function (e) {
   e.preventDefault();
 
   // Get form data
-  const formData = new FormData(this);
   const name = this.querySelector('input[type="text"]').value;
   const email = this.querySelector('input[type="email"]').value;
   const subject = this.querySelector('input[type="text"]:nth-of-type(2)').value;
@@ -117,7 +187,6 @@ document.querySelector("form").addEventListener("submit", function (e) {
   // Reset form
   this.reset();
 
-  // Here you would typically send the data to your server
   console.log("Form submitted:", { name, email, subject, message });
 });
 
@@ -162,32 +231,6 @@ window.addEventListener("scroll", () => {
   });
 });
 
-// Typing effect for hero title (optional enhancement)
-function typeWriter(element, text, speed = 100) {
-  let i = 0;
-  element.innerHTML = "";
-
-  function type() {
-    if (i < text.length) {
-      element.innerHTML += text.charAt(i);
-      i++;
-      setTimeout(type, speed);
-    }
-  }
-
-  type();
-}
-
-// Initialize typing effect when page loads
-window.addEventListener("load", () => {
-  const heroTitle = document.querySelector(".hero-title");
-  if (heroTitle) {
-    const originalText = heroTitle.textContent;
-    // Uncomment the line below to enable typing effect
-    // typeWriter(heroTitle, originalText, 150);
-  }
-});
-
 // Loading animation
 window.addEventListener("load", () => {
   document.body.classList.add("loaded");
@@ -217,23 +260,20 @@ const optimizedScrollHandler = debounce(() => {
 
 window.addEventListener("scroll", optimizedScrollHandler);
 
-// Social links click tracking (for analytics)
+// Social links click tracking
 document.querySelectorAll(".social a").forEach((link) => {
   link.addEventListener("click", function (e) {
     const platform = this.getAttribute("title");
     console.log(`Social link clicked: ${platform}`);
-    // Here you could add analytics tracking
   });
 });
 
 // Keyboard navigation support
 document.addEventListener("keydown", function (e) {
-  // Press 'Escape' to close any modals or overlays
   if (e.key === "Escape") {
     // Add modal close functionality here if needed
   }
 
-  // Press 'Tab' for better focus management
   if (e.key === "Tab") {
     document.body.classList.add("keyboard-navigation");
   }
@@ -242,9 +282,6 @@ document.addEventListener("keydown", function (e) {
 document.addEventListener("mousedown", function () {
   document.body.classList.remove("keyboard-navigation");
 });
-
-// Performance monitoring
-console.log("Portfolio website loaded successfully!");
 
 // Spotlight Effect Background
 class SpotlightBackground {
@@ -336,8 +373,6 @@ class SpotlightBackground {
 
     this.canvas.addEventListener("mouseleave", () => {
       this.targetSpotlightRadius = this.minSpotlightRadius;
-      // Keep spotlight at last cursor position when mouse leaves
-      // No need to change targetMouseX and targetMouseY - they stay at last position
     });
   }
 
@@ -380,11 +415,14 @@ class SpotlightBackground {
       0.05
     );
 
-    // Fill background with deep black
-    this.ctx.fillStyle = "#000000";
+    // Get current theme for color adaptation
+    const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
+
+    // Fill background based on theme
+    this.ctx.fillStyle = isDarkTheme ? "#000000" : "#f8f9fa";
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // Create main spotlight gradient
+    // Create main spotlight gradient with theme-aware colors
     const mainGradient = this.ctx.createRadialGradient(
       this.mouseX,
       this.mouseY,
@@ -394,16 +432,32 @@ class SpotlightBackground {
       this.spotlightRadius
     );
 
-    // Dynamic color based on position
-    const hue = ((this.mouseX / this.width) * 360 + this.time * 10) % 360;
+    // Dynamic color based on position - using lilac/violet theme
+    const hue = 280; // Purple/violet base hue
     const saturation = 60 + Math.sin(this.time) * 20;
+    const opacity = isDarkTheme ? 0.4 : 0.2;
 
     // Create sophisticated gradient stops
-    mainGradient.addColorStop(0, `hsla(${hue}, ${saturation}%, 85%, 0.4)`);
-    mainGradient.addColorStop(0.2, `hsla(${hue}, ${saturation}%, 70%, 0.3)`);
-    mainGradient.addColorStop(0.4, `hsla(${hue}, ${saturation}%, 55%, 0.2)`);
-    mainGradient.addColorStop(0.6, `hsla(${hue}, ${saturation}%, 40%, 0.1)`);
-    mainGradient.addColorStop(0.8, `hsla(${hue}, ${saturation}%, 25%, 0.05)`);
+    mainGradient.addColorStop(
+      0,
+      `hsla(${hue}, ${saturation}%, 85%, ${opacity})`
+    );
+    mainGradient.addColorStop(
+      0.2,
+      `hsla(${hue}, ${saturation}%, 70%, ${opacity * 0.75})`
+    );
+    mainGradient.addColorStop(
+      0.4,
+      `hsla(${hue}, ${saturation}%, 55%, ${opacity * 0.5})`
+    );
+    mainGradient.addColorStop(
+      0.6,
+      `hsla(${hue}, ${saturation}%, 40%, ${opacity * 0.25})`
+    );
+    mainGradient.addColorStop(
+      0.8,
+      `hsla(${hue}, ${saturation}%, 25%, ${opacity * 0.125})`
+    );
     mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
 
     // Apply main spotlight
@@ -421,11 +475,14 @@ class SpotlightBackground {
       this.spotlightRadius * 0.6
     );
 
-    const secondaryHue = (hue + 60) % 360;
-    secondaryGradient.addColorStop(0, `hsla(${secondaryHue}, 40%, 90%, 0.15)`);
+    const secondaryHue = 260; // Slightly different violet
+    secondaryGradient.addColorStop(
+      0,
+      `hsla(${secondaryHue}, 40%, 90%, ${opacity * 0.375})`
+    );
     secondaryGradient.addColorStop(
       0.5,
-      `hsla(${secondaryHue}, 40%, 60%, 0.08)`
+      `hsla(${secondaryHue}, 40%, 60%, ${opacity * 0.2})`
     );
     secondaryGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
 
@@ -455,15 +512,9 @@ class SpotlightBackground {
       );
 
       const intensity = effect.life * effect.intensity;
-      burstGradient.addColorStop(0, `rgba(255, 255, 255, ${intensity * 0.6})`);
-      burstGradient.addColorStop(
-        0.3,
-        `rgba(255, 107, 107, ${intensity * 0.4})`
-      );
-      burstGradient.addColorStop(
-        0.6,
-        `rgba(255, 107, 107, ${intensity * 0.2})`
-      );
+      burstGradient.addColorStop(0, `rgba(191, 163, 255, ${intensity * 0.8})`); // Lilac
+      burstGradient.addColorStop(0.3, `rgba(154, 77, 255, ${intensity * 0.6})`); // Violet
+      burstGradient.addColorStop(0.6, `rgba(109, 29, 255, ${intensity * 0.4})`); // Deep violet
       burstGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
 
       this.ctx.fillStyle = burstGradient;
@@ -477,14 +528,17 @@ class SpotlightBackground {
       // Bright center point
       this.ctx.beginPath();
       this.ctx.arc(effect.x, effect.y, effect.radius * 0.1, 0, 2 * Math.PI);
-      this.ctx.fillStyle = `rgba(255, 255, 255, ${intensity})`;
+      this.ctx.fillStyle = `rgba(191, 163, 255, ${intensity})`;
       this.ctx.fill();
     });
   }
 
   drawGridPattern() {
+    const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
     this.ctx.globalCompositeOperation = "overlay";
-    this.ctx.strokeStyle = "rgba(255, 255, 255, 0.02)";
+    this.ctx.strokeStyle = isDarkTheme
+      ? "rgba(255, 255, 255, 0.02)"
+      : "rgba(0, 0, 0, 0.02)";
     this.ctx.lineWidth = 0.5;
 
     const gridSize = 50;
@@ -530,3 +584,5 @@ document.addEventListener("DOMContentLoaded", () => {
     new SpotlightBackground(canvas);
   }
 });
+
+console.log("Portfolio website loaded successfully!");
