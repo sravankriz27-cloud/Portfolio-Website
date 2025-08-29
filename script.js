@@ -2,18 +2,12 @@
 const themeToggle = document.getElementById("themeToggle");
 const body = document.body;
 
-// Check for saved theme preference
-const savedTheme = localStorage.getItem("theme");
-if (savedTheme) {
-  body.setAttribute("data-theme", savedTheme);
-}
+// Check for saved theme preference - Don't use localStorage in artifacts
+let currentTheme = "dark"; // Default theme
 
 themeToggle.addEventListener("click", () => {
-  const currentTheme = body.getAttribute("data-theme");
-  const newTheme = currentTheme === "light" ? "dark" : "light";
-
-  body.setAttribute("data-theme", newTheme);
-  localStorage.setItem("theme", newTheme);
+  currentTheme = currentTheme === "light" ? "dark" : "light";
+  body.setAttribute("data-theme", currentTheme);
 });
 
 // Custom Cursor
@@ -283,13 +277,14 @@ document.addEventListener("mousedown", function () {
   document.body.classList.remove("keyboard-navigation");
 });
 
-// Spotlight Effect Background
+// Spotlight Effect Background Class
 class SpotlightBackground {
-  constructor(canvas) {
+  constructor(canvas, isPortfolio = false) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.width = 0;
     this.height = 0;
+    this.isPortfolio = isPortfolio;
 
     // Mouse tracking
     this.mouseX = 0;
@@ -302,12 +297,15 @@ class SpotlightBackground {
     this.pulseIntensity = 1;
 
     // Spotlight properties
-    this.spotlightRadius = 400;
-    this.maxSpotlightRadius = 500;
-    this.minSpotlightRadius = 300;
+    this.spotlightRadius = isPortfolio ? 300 : 400;
+    this.maxSpotlightRadius = isPortfolio ? 400 : 500;
+    this.minSpotlightRadius = isPortfolio ? 250 : 300;
 
     // Click effects
     this.clickEffects = [];
+
+    // Portfolio specific properties
+    this.isVisible = false;
 
     this.init();
     this.setupEventListeners();
@@ -338,6 +336,10 @@ class SpotlightBackground {
       const rect = this.canvas.getBoundingClientRect();
       this.targetMouseX = e.clientX - rect.left;
       this.targetMouseY = e.clientY - rect.top;
+
+      if (this.isPortfolio) {
+        this.isVisible = true;
+      }
     });
 
     // Mouse click for enhanced light burst
@@ -355,6 +357,10 @@ class SpotlightBackground {
       const touch = e.touches[0];
       this.targetMouseX = touch.clientX - rect.left;
       this.targetMouseY = touch.clientY - rect.top;
+
+      if (this.isPortfolio) {
+        this.isVisible = true;
+      }
     });
 
     this.canvas.addEventListener("touchstart", (e) => {
@@ -369,11 +375,31 @@ class SpotlightBackground {
     // Mouse enter/leave for spotlight size
     this.canvas.addEventListener("mouseenter", () => {
       this.targetSpotlightRadius = this.maxSpotlightRadius;
+      if (this.isPortfolio) {
+        this.isVisible = true;
+      }
     });
 
     this.canvas.addEventListener("mouseleave", () => {
       this.targetSpotlightRadius = this.minSpotlightRadius;
+      if (this.isPortfolio) {
+        this.isVisible = false;
+      }
     });
+
+    // For portfolio section, also listen to parent section events
+    if (this.isPortfolio) {
+      const portfolioSection = document.getElementById("portfolio");
+      if (portfolioSection) {
+        portfolioSection.addEventListener("mouseenter", () => {
+          this.isVisible = true;
+        });
+
+        portfolioSection.addEventListener("mouseleave", () => {
+          this.isVisible = false;
+        });
+      }
+    }
   }
 
   addClickEffect(x, y) {
@@ -381,10 +407,10 @@ class SpotlightBackground {
       x: x,
       y: y,
       radius: 0,
-      maxRadius: 200,
+      maxRadius: this.isPortfolio ? 150 : 200,
       life: 1.0,
       decay: 0.03,
-      intensity: 1.5,
+      intensity: this.isPortfolio ? 1.2 : 1.5,
     });
   }
 
@@ -402,13 +428,19 @@ class SpotlightBackground {
   }
 
   drawSpotlight() {
+    // For portfolio section, only draw when visible
+    if (this.isPortfolio && !this.isVisible) {
+      this.ctx.clearRect(0, 0, this.width, this.height);
+      return;
+    }
+
     // Smooth mouse following
     this.mouseX = this.lerp(this.mouseX, this.targetMouseX, 0.08);
     this.mouseY = this.lerp(this.mouseY, this.targetMouseY, 0.08);
 
     // Animate spotlight radius with subtle pulsing
     this.time += 0.02;
-    const pulse = Math.sin(this.time) * 20;
+    const pulse = Math.sin(this.time) * (this.isPortfolio ? 15 : 20);
     this.spotlightRadius = this.lerp(
       this.spotlightRadius,
       (this.targetSpotlightRadius || this.maxSpotlightRadius) + pulse,
@@ -418,9 +450,8 @@ class SpotlightBackground {
     // Get current theme for color adaptation
     const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
 
-    // Fill background based on theme
-    this.ctx.fillStyle = isDarkTheme ? "#000000" : "#f8f9fa";
-    this.ctx.fillRect(0, 0, this.width, this.height);
+    // Clear canvas first
+    this.ctx.clearRect(0, 0, this.width, this.height);
 
     // Create main spotlight gradient with theme-aware colors
     const mainGradient = this.ctx.createRadialGradient(
@@ -432,62 +463,114 @@ class SpotlightBackground {
       this.spotlightRadius
     );
 
-    // Dynamic color based on position - using lilac/violet theme
-    const hue = 280; // Purple/violet base hue
-    const saturation = 60 + Math.sin(this.time) * 20;
-    const opacity = isDarkTheme ? 0.4 : 0.2;
+    // Portfolio section uses different colors and intensity
+    if (this.isPortfolio) {
+      if (isDarkTheme) {
+        // Dark theme - purple/violet spotlight
+        const hue = 280;
+        const saturation = 50;
+        const opacity = 0.3;
 
-    // Create sophisticated gradient stops
-    mainGradient.addColorStop(
-      0,
-      `hsla(${hue}, ${saturation}%, 85%, ${opacity})`
-    );
-    mainGradient.addColorStop(
-      0.2,
-      `hsla(${hue}, ${saturation}%, 70%, ${opacity * 0.75})`
-    );
-    mainGradient.addColorStop(
-      0.4,
-      `hsla(${hue}, ${saturation}%, 55%, ${opacity * 0.5})`
-    );
-    mainGradient.addColorStop(
-      0.6,
-      `hsla(${hue}, ${saturation}%, 40%, ${opacity * 0.25})`
-    );
-    mainGradient.addColorStop(
-      0.8,
-      `hsla(${hue}, ${saturation}%, 25%, ${opacity * 0.125})`
-    );
-    mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+        mainGradient.addColorStop(
+          0,
+          `hsla(${hue}, ${saturation}%, 85%, ${opacity})`
+        );
+        mainGradient.addColorStop(
+          0.2,
+          `hsla(${hue}, ${saturation}%, 70%, ${opacity * 0.75})`
+        );
+        mainGradient.addColorStop(
+          0.4,
+          `hsla(${hue}, ${saturation}%, 55%, ${opacity * 0.5})`
+        );
+        mainGradient.addColorStop(
+          0.6,
+          `hsla(${hue}, ${saturation}%, 40%, ${opacity * 0.25})`
+        );
+        mainGradient.addColorStop(
+          0.8,
+          `hsla(${hue}, ${saturation}%, 25%, ${opacity * 0.125})`
+        );
+        mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      } else {
+        // Light theme - subtle grey/dark spotlight
+        const opacity = 0.15;
+
+        mainGradient.addColorStop(0, `rgba(60, 60, 60, ${opacity})`);
+        mainGradient.addColorStop(0.2, `rgba(80, 80, 80, ${opacity * 0.75})`);
+        mainGradient.addColorStop(0.4, `rgba(100, 100, 100, ${opacity * 0.5})`);
+        mainGradient.addColorStop(
+          0.6,
+          `rgba(120, 120, 120, ${opacity * 0.25})`
+        );
+        mainGradient.addColorStop(
+          0.8,
+          `rgba(140, 140, 140, ${opacity * 0.125})`
+        );
+        mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      }
+    } else {
+      // Hero section - original colors
+      const hue = 280;
+      const saturation = 60 + Math.sin(this.time) * 20;
+      const opacity = isDarkTheme ? 0.4 : 0.2;
+
+      mainGradient.addColorStop(
+        0,
+        `hsla(${hue}, ${saturation}%, 85%, ${opacity})`
+      );
+      mainGradient.addColorStop(
+        0.2,
+        `hsla(${hue}, ${saturation}%, 70%, ${opacity * 0.75})`
+      );
+      mainGradient.addColorStop(
+        0.4,
+        `hsla(${hue}, ${saturation}%, 55%, ${opacity * 0.5})`
+      );
+      mainGradient.addColorStop(
+        0.6,
+        `hsla(${hue}, ${saturation}%, 40%, ${opacity * 0.25})`
+      );
+      mainGradient.addColorStop(
+        0.8,
+        `hsla(${hue}, ${saturation}%, 25%, ${opacity * 0.125})`
+      );
+      mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    }
 
     // Apply main spotlight
     this.ctx.globalCompositeOperation = "screen";
     this.ctx.fillStyle = mainGradient;
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // Add subtle secondary light for depth
-    const secondaryGradient = this.ctx.createRadialGradient(
-      this.mouseX,
-      this.mouseY,
-      0,
-      this.mouseX,
-      this.mouseY,
-      this.spotlightRadius * 0.6
-    );
+    // Add secondary light for depth (only for hero section)
+    if (!this.isPortfolio) {
+      const secondaryGradient = this.ctx.createRadialGradient(
+        this.mouseX,
+        this.mouseY,
+        0,
+        this.mouseX,
+        this.mouseY,
+        this.spotlightRadius * 0.6
+      );
 
-    const secondaryHue = 260; // Slightly different violet
-    secondaryGradient.addColorStop(
-      0,
-      `hsla(${secondaryHue}, 40%, 90%, ${opacity * 0.375})`
-    );
-    secondaryGradient.addColorStop(
-      0.5,
-      `hsla(${secondaryHue}, 40%, 60%, ${opacity * 0.2})`
-    );
-    secondaryGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
+      const secondaryHue = 260;
+      const opacity = isDarkTheme ? 0.4 : 0.2;
 
-    this.ctx.fillStyle = secondaryGradient;
-    this.ctx.fillRect(0, 0, this.width, this.height);
+      secondaryGradient.addColorStop(
+        0,
+        `hsla(${secondaryHue}, 40%, 90%, ${opacity * 0.375})`
+      );
+      secondaryGradient.addColorStop(
+        0.5,
+        `hsla(${secondaryHue}, 40%, 60%, ${opacity * 0.2})`
+      );
+      secondaryGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+      this.ctx.fillStyle = secondaryGradient;
+      this.ctx.fillRect(0, 0, this.width, this.height);
+    }
 
     // Draw click effects
     this.drawClickEffects();
@@ -495,13 +578,14 @@ class SpotlightBackground {
     // Reset composite operation
     this.ctx.globalCompositeOperation = "source-over";
 
-    // Add subtle grid pattern for texture
-    this.drawGridPattern();
+    // Add subtle grid pattern for texture (only for hero)
+    if (!this.isPortfolio) {
+      this.drawGridPattern();
+    }
   }
 
   drawClickEffects() {
     this.clickEffects.forEach((effect) => {
-      // Expanding light burst
       const burstGradient = this.ctx.createRadialGradient(
         effect.x,
         effect.y,
@@ -512,10 +596,33 @@ class SpotlightBackground {
       );
 
       const intensity = effect.life * effect.intensity;
-      burstGradient.addColorStop(0, `rgba(191, 163, 255, ${intensity * 0.8})`); // Lilac
-      burstGradient.addColorStop(0.3, `rgba(154, 77, 255, ${intensity * 0.6})`); // Violet
-      burstGradient.addColorStop(0.6, `rgba(109, 29, 255, ${intensity * 0.4})`); // Deep violet
-      burstGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
+
+      if (this.isPortfolio && !isDarkTheme) {
+        // Light theme click effects for portfolio
+        burstGradient.addColorStop(0, `rgba(60, 60, 60, ${intensity * 0.4})`);
+        burstGradient.addColorStop(0.3, `rgba(80, 80, 80, ${intensity * 0.3})`);
+        burstGradient.addColorStop(
+          0.6,
+          `rgba(100, 100, 100, ${intensity * 0.2})`
+        );
+        burstGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      } else {
+        // Dark theme or hero section click effects
+        burstGradient.addColorStop(
+          0,
+          `rgba(191, 163, 255, ${intensity * 0.8})`
+        );
+        burstGradient.addColorStop(
+          0.3,
+          `rgba(154, 77, 255, ${intensity * 0.6})`
+        );
+        burstGradient.addColorStop(
+          0.6,
+          `rgba(109, 29, 255, ${intensity * 0.4})`
+        );
+        burstGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      }
 
       this.ctx.fillStyle = burstGradient;
       this.ctx.fillRect(
@@ -528,7 +635,12 @@ class SpotlightBackground {
       // Bright center point
       this.ctx.beginPath();
       this.ctx.arc(effect.x, effect.y, effect.radius * 0.1, 0, 2 * Math.PI);
-      this.ctx.fillStyle = `rgba(191, 163, 255, ${intensity})`;
+
+      if (this.isPortfolio && !isDarkTheme) {
+        this.ctx.fillStyle = `rgba(40, 40, 40, ${intensity})`;
+      } else {
+        this.ctx.fillStyle = `rgba(191, 163, 255, ${intensity})`;
+      }
       this.ctx.fill();
     });
   }
@@ -563,9 +675,6 @@ class SpotlightBackground {
   }
 
   animate() {
-    // Clear canvas
-    this.ctx.clearRect(0, 0, this.width, this.height);
-
     // Update effects
     this.updateClickEffects();
 
@@ -577,12 +686,19 @@ class SpotlightBackground {
   }
 }
 
-// Initialize spotlight background when page loads
+// Initialize spotlight backgrounds when page loads
 document.addEventListener("DOMContentLoaded", () => {
-  const canvas = document.getElementById("fluidCanvas");
-  if (canvas) {
-    new SpotlightBackground(canvas);
+  // Hero section spotlight
+  const heroCanvas = document.getElementById("fluidCanvas");
+  if (heroCanvas) {
+    new SpotlightBackground(heroCanvas, false);
+  }
+
+  // Portfolio section spotlight
+  const portfolioCanvas = document.getElementById("portfolioCanvas");
+  if (portfolioCanvas) {
+    new SpotlightBackground(portfolioCanvas, true);
   }
 });
 
-console.log("Portfolio website loaded successfully!");
+console.log("Enhanced portfolio website loaded successfully!");
