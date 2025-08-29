@@ -245,3 +245,288 @@ document.addEventListener("mousedown", function () {
 
 // Performance monitoring
 console.log("Portfolio website loaded successfully!");
+
+// Spotlight Effect Background
+class SpotlightBackground {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.width = 0;
+    this.height = 0;
+
+    // Mouse tracking
+    this.mouseX = 0;
+    this.mouseY = 0;
+    this.targetMouseX = 0;
+    this.targetMouseY = 0;
+
+    // Animation properties
+    this.time = 0;
+    this.pulseIntensity = 1;
+
+    // Spotlight properties
+    this.spotlightRadius = 400;
+    this.maxSpotlightRadius = 500;
+    this.minSpotlightRadius = 300;
+
+    // Click effects
+    this.clickEffects = [];
+
+    this.init();
+    this.setupEventListeners();
+    this.animate();
+  }
+
+  init() {
+    this.resize();
+    window.addEventListener("resize", () => this.resize());
+  }
+
+  resize() {
+    this.width = this.canvas.offsetWidth;
+    this.height = this.canvas.offsetHeight;
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
+
+    // Initialize mouse position to center
+    this.mouseX = this.width / 2;
+    this.mouseY = this.height / 2;
+    this.targetMouseX = this.mouseX;
+    this.targetMouseY = this.mouseY;
+  }
+
+  setupEventListeners() {
+    // Mouse movement
+    this.canvas.addEventListener("mousemove", (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      this.targetMouseX = e.clientX - rect.left;
+      this.targetMouseY = e.clientY - rect.top;
+    });
+
+    // Mouse click for enhanced light burst
+    this.canvas.addEventListener("click", (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      this.addClickEffect(x, y);
+    });
+
+    // Touch support
+    this.canvas.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      const rect = this.canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      this.targetMouseX = touch.clientX - rect.left;
+      this.targetMouseY = touch.clientY - rect.top;
+    });
+
+    this.canvas.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      const rect = this.canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      this.addClickEffect(x, y);
+    });
+
+    // Mouse enter/leave for spotlight size
+    this.canvas.addEventListener("mouseenter", () => {
+      this.targetSpotlightRadius = this.maxSpotlightRadius;
+    });
+
+    this.canvas.addEventListener("mouseleave", () => {
+      this.targetSpotlightRadius = this.minSpotlightRadius;
+      // Keep spotlight at last cursor position when mouse leaves
+      // No need to change targetMouseX and targetMouseY - they stay at last position
+    });
+  }
+
+  addClickEffect(x, y) {
+    this.clickEffects.push({
+      x: x,
+      y: y,
+      radius: 0,
+      maxRadius: 200,
+      life: 1.0,
+      decay: 0.03,
+      intensity: 1.5,
+    });
+  }
+
+  updateClickEffects() {
+    this.clickEffects = this.clickEffects.filter((effect) => {
+      effect.radius += 8;
+      effect.life -= effect.decay;
+      effect.intensity -= 0.02;
+      return effect.life > 0;
+    });
+  }
+
+  lerp(start, end, factor) {
+    return start + (end - start) * factor;
+  }
+
+  drawSpotlight() {
+    // Smooth mouse following
+    this.mouseX = this.lerp(this.mouseX, this.targetMouseX, 0.08);
+    this.mouseY = this.lerp(this.mouseY, this.targetMouseY, 0.08);
+
+    // Animate spotlight radius with subtle pulsing
+    this.time += 0.02;
+    const pulse = Math.sin(this.time) * 20;
+    this.spotlightRadius = this.lerp(
+      this.spotlightRadius,
+      (this.targetSpotlightRadius || this.maxSpotlightRadius) + pulse,
+      0.05
+    );
+
+    // Fill background with deep black
+    this.ctx.fillStyle = "#000000";
+    this.ctx.fillRect(0, 0, this.width, this.height);
+
+    // Create main spotlight gradient
+    const mainGradient = this.ctx.createRadialGradient(
+      this.mouseX,
+      this.mouseY,
+      0,
+      this.mouseX,
+      this.mouseY,
+      this.spotlightRadius
+    );
+
+    // Dynamic color based on position
+    const hue = ((this.mouseX / this.width) * 360 + this.time * 10) % 360;
+    const saturation = 60 + Math.sin(this.time) * 20;
+
+    // Create sophisticated gradient stops
+    mainGradient.addColorStop(0, `hsla(${hue}, ${saturation}%, 85%, 0.4)`);
+    mainGradient.addColorStop(0.2, `hsla(${hue}, ${saturation}%, 70%, 0.3)`);
+    mainGradient.addColorStop(0.4, `hsla(${hue}, ${saturation}%, 55%, 0.2)`);
+    mainGradient.addColorStop(0.6, `hsla(${hue}, ${saturation}%, 40%, 0.1)`);
+    mainGradient.addColorStop(0.8, `hsla(${hue}, ${saturation}%, 25%, 0.05)`);
+    mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+    // Apply main spotlight
+    this.ctx.globalCompositeOperation = "screen";
+    this.ctx.fillStyle = mainGradient;
+    this.ctx.fillRect(0, 0, this.width, this.height);
+
+    // Add subtle secondary light for depth
+    const secondaryGradient = this.ctx.createRadialGradient(
+      this.mouseX,
+      this.mouseY,
+      0,
+      this.mouseX,
+      this.mouseY,
+      this.spotlightRadius * 0.6
+    );
+
+    const secondaryHue = (hue + 60) % 360;
+    secondaryGradient.addColorStop(0, `hsla(${secondaryHue}, 40%, 90%, 0.15)`);
+    secondaryGradient.addColorStop(
+      0.5,
+      `hsla(${secondaryHue}, 40%, 60%, 0.08)`
+    );
+    secondaryGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+    this.ctx.fillStyle = secondaryGradient;
+    this.ctx.fillRect(0, 0, this.width, this.height);
+
+    // Draw click effects
+    this.drawClickEffects();
+
+    // Reset composite operation
+    this.ctx.globalCompositeOperation = "source-over";
+
+    // Add subtle grid pattern for texture
+    this.drawGridPattern();
+  }
+
+  drawClickEffects() {
+    this.clickEffects.forEach((effect) => {
+      // Expanding light burst
+      const burstGradient = this.ctx.createRadialGradient(
+        effect.x,
+        effect.y,
+        0,
+        effect.x,
+        effect.y,
+        effect.radius
+      );
+
+      const intensity = effect.life * effect.intensity;
+      burstGradient.addColorStop(0, `rgba(255, 255, 255, ${intensity * 0.6})`);
+      burstGradient.addColorStop(
+        0.3,
+        `rgba(255, 107, 107, ${intensity * 0.4})`
+      );
+      burstGradient.addColorStop(
+        0.6,
+        `rgba(255, 107, 107, ${intensity * 0.2})`
+      );
+      burstGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+      this.ctx.fillStyle = burstGradient;
+      this.ctx.fillRect(
+        effect.x - effect.radius,
+        effect.y - effect.radius,
+        effect.radius * 2,
+        effect.radius * 2
+      );
+
+      // Bright center point
+      this.ctx.beginPath();
+      this.ctx.arc(effect.x, effect.y, effect.radius * 0.1, 0, 2 * Math.PI);
+      this.ctx.fillStyle = `rgba(255, 255, 255, ${intensity})`;
+      this.ctx.fill();
+    });
+  }
+
+  drawGridPattern() {
+    this.ctx.globalCompositeOperation = "overlay";
+    this.ctx.strokeStyle = "rgba(255, 255, 255, 0.02)";
+    this.ctx.lineWidth = 0.5;
+
+    const gridSize = 50;
+
+    // Vertical lines
+    for (let x = 0; x <= this.width; x += gridSize) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, 0);
+      this.ctx.lineTo(x, this.height);
+      this.ctx.stroke();
+    }
+
+    // Horizontal lines
+    for (let y = 0; y <= this.height; y += gridSize) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, y);
+      this.ctx.lineTo(this.width, y);
+      this.ctx.stroke();
+    }
+
+    this.ctx.globalCompositeOperation = "source-over";
+  }
+
+  animate() {
+    // Clear canvas
+    this.ctx.clearRect(0, 0, this.width, this.height);
+
+    // Update effects
+    this.updateClickEffects();
+
+    // Draw spotlight effect
+    this.drawSpotlight();
+
+    // Continue animation
+    requestAnimationFrame(() => this.animate());
+  }
+}
+
+// Initialize spotlight background when page loads
+document.addEventListener("DOMContentLoaded", () => {
+  const canvas = document.getElementById("fluidCanvas");
+  if (canvas) {
+    new SpotlightBackground(canvas);
+  }
+});
