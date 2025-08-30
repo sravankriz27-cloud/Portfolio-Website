@@ -277,6 +277,11 @@ document.addEventListener("mousedown", function () {
   document.body.classList.remove("keyboard-navigation");
 });
 
+// Global spotlight management to prevent multiple active spotlights
+let heroSpotlight = null;
+let portfolioSpotlight = null;
+let activeSpotlight = null;
+
 // Spotlight Effect Background Class
 class SpotlightBackground {
   constructor(canvas, isPortfolio = false) {
@@ -304,8 +309,9 @@ class SpotlightBackground {
     // Click effects
     this.clickEffects = [];
 
-    // Portfolio specific properties
-    this.isVisible = false;
+    // Active state
+    this.isActive = false;
+    this.fadeAlpha = 0; // For smooth transitions
 
     this.init();
     this.setupEventListeners();
@@ -331,75 +337,80 @@ class SpotlightBackground {
   }
 
   setupEventListeners() {
-    // Mouse movement
-    this.canvas.addEventListener("mousemove", (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      this.targetMouseX = e.clientX - rect.left;
-      this.targetMouseY = e.clientY - rect.top;
+    const parentSection = this.isPortfolio
+      ? document.getElementById("portfolio")
+      : document.getElementById("home");
 
-      if (this.isPortfolio) {
-        this.isVisible = true;
-      }
-    });
+    if (parentSection) {
+      parentSection.addEventListener("mouseenter", () => {
+        this.activateSpotlight();
+      });
 
-    // Mouse click for enhanced light burst
-    this.canvas.addEventListener("click", (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      this.addClickEffect(x, y);
-    });
+      parentSection.addEventListener("mouseleave", () => {
+        this.deactivateSpotlight();
+      });
+
+      // Global mouse move listener for better tracking
+      document.addEventListener("mousemove", (e) => {
+        if (this.isActive) {
+          const rect = this.canvas.getBoundingClientRect();
+          this.targetMouseX = e.clientX - rect.left;
+          this.targetMouseY = e.clientY - rect.top;
+        }
+      });
+
+      parentSection.addEventListener("click", (e) => {
+        if (this.isActive) {
+          const rect = this.canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          this.addClickEffect(x, y);
+        }
+      });
+    }
 
     // Touch support
-    this.canvas.addEventListener("touchmove", (e) => {
-      e.preventDefault();
-      const rect = this.canvas.getBoundingClientRect();
-      const touch = e.touches[0];
-      this.targetMouseX = touch.clientX - rect.left;
-      this.targetMouseY = touch.clientY - rect.top;
+    if (parentSection) {
+      parentSection.addEventListener("touchmove", (e) => {
+        if (this.isActive) {
+          e.preventDefault();
+          const rect = this.canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          this.targetMouseX = touch.clientX - rect.left;
+          this.targetMouseY = touch.clientY - rect.top;
+        }
+      });
 
-      if (this.isPortfolio) {
-        this.isVisible = true;
-      }
-    });
-
-    this.canvas.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      const rect = this.canvas.getBoundingClientRect();
-      const touch = e.touches[0];
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
-      this.addClickEffect(x, y);
-    });
-
-    // Mouse enter/leave for spotlight size
-    this.canvas.addEventListener("mouseenter", () => {
-      this.targetSpotlightRadius = this.maxSpotlightRadius;
-      if (this.isPortfolio) {
-        this.isVisible = true;
-      }
-    });
-
-    this.canvas.addEventListener("mouseleave", () => {
-      this.targetSpotlightRadius = this.minSpotlightRadius;
-      if (this.isPortfolio) {
-        this.isVisible = false;
-      }
-    });
-
-    // For portfolio section, also listen to parent section events
-    if (this.isPortfolio) {
-      const portfolioSection = document.getElementById("portfolio");
-      if (portfolioSection) {
-        portfolioSection.addEventListener("mouseenter", () => {
-          this.isVisible = true;
-        });
-
-        portfolioSection.addEventListener("mouseleave", () => {
-          this.isVisible = false;
-        });
-      }
+      parentSection.addEventListener("touchstart", (e) => {
+        if (this.isActive) {
+          e.preventDefault();
+          const rect = this.canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          const x = touch.clientX - rect.left;
+          const y = touch.clientY - rect.top;
+          this.addClickEffect(x, y);
+        }
+      });
     }
+  }
+
+  activateSpotlight() {
+    // Deactivate other spotlights first
+    if (activeSpotlight && activeSpotlight !== this) {
+      activeSpotlight.deactivateSpotlight();
+    }
+
+    this.isActive = true;
+    activeSpotlight = this;
+    this.targetSpotlightRadius = this.maxSpotlightRadius;
+  }
+
+  deactivateSpotlight() {
+    this.isActive = false;
+    if (activeSpotlight === this) {
+      activeSpotlight = null;
+    }
+    this.targetSpotlightRadius = this.minSpotlightRadius;
   }
 
   addClickEffect(x, y) {
@@ -428,11 +439,18 @@ class SpotlightBackground {
   }
 
   drawSpotlight() {
-    // For portfolio section, only draw when visible
-    if (this.isPortfolio && !this.isVisible) {
-      this.ctx.clearRect(0, 0, this.width, this.height);
-      return;
+    // Smooth fade in/out
+    if (this.isActive) {
+      this.fadeAlpha = Math.min(1, this.fadeAlpha + 0.05);
+    } else {
+      this.fadeAlpha = Math.max(0, this.fadeAlpha - 0.05);
     }
+
+    // Clear canvas first
+    this.ctx.clearRect(0, 0, this.width, this.height);
+
+    // Don't draw if completely faded out
+    if (this.fadeAlpha <= 0) return;
 
     // Smooth mouse following
     this.mouseX = this.lerp(this.mouseX, this.targetMouseX, 0.08);
@@ -450,9 +468,6 @@ class SpotlightBackground {
     // Get current theme for color adaptation
     const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
 
-    // Clear canvas first
-    this.ctx.clearRect(0, 0, this.width, this.height);
-
     // Create main spotlight gradient with theme-aware colors
     const mainGradient = this.ctx.createRadialGradient(
       this.mouseX,
@@ -469,7 +484,7 @@ class SpotlightBackground {
         // Dark theme - purple/violet spotlight
         const hue = 280;
         const saturation = 50;
-        const opacity = 0.3;
+        const opacity = 0.4 * this.fadeAlpha;
 
         mainGradient.addColorStop(
           0,
@@ -493,15 +508,57 @@ class SpotlightBackground {
         );
         mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
       } else {
-        // Light theme - subtle grey/dark spotlight
-        const opacity = 0.15;
+        // Light theme - darker grey spotlight
+        const opacity = 0.35 * this.fadeAlpha;
 
-        mainGradient.addColorStop(0, `rgba(60, 60, 60, ${opacity})`);
-        mainGradient.addColorStop(0.2, `rgba(80, 80, 80, ${opacity * 0.75})`);
-        mainGradient.addColorStop(0.4, `rgba(100, 100, 100, ${opacity * 0.5})`);
+        mainGradient.addColorStop(0, `rgba(40, 40, 40, ${opacity})`);
+        mainGradient.addColorStop(0.2, `rgba(50, 50, 50, ${opacity * 0.75})`);
+        mainGradient.addColorStop(0.4, `rgba(60, 60, 60, ${opacity * 0.5})`);
+        mainGradient.addColorStop(0.6, `rgba(70, 70, 70, ${opacity * 0.25})`);
+        mainGradient.addColorStop(0.8, `rgba(80, 80, 80, ${opacity * 0.125})`);
+        mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      }
+    } else {
+      // Hero section - greyish spotlight in light mode
+      if (isDarkTheme) {
+        const hue = 280;
+        const saturation = 60 + Math.sin(this.time) * 20;
+        const opacity = 0.4 * this.fadeAlpha;
+
+        mainGradient.addColorStop(
+          0,
+          `hsla(${hue}, ${saturation}%, 85%, ${opacity})`
+        );
+        mainGradient.addColorStop(
+          0.2,
+          `hsla(${hue}, ${saturation}%, 70%, ${opacity * 0.75})`
+        );
+        mainGradient.addColorStop(
+          0.4,
+          `hsla(${hue}, ${saturation}%, 55%, ${opacity * 0.5})`
+        );
         mainGradient.addColorStop(
           0.6,
-          `rgba(120, 120, 120, ${opacity * 0.25})`
+          `hsla(${hue}, ${saturation}%, 40%, ${opacity * 0.25})`
+        );
+        mainGradient.addColorStop(
+          0.8,
+          `hsla(${hue}, ${saturation}%, 25%, ${opacity * 0.125})`
+        );
+        mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      } else {
+        // Light theme - greyish spotlight for hero
+        const opacity = 0.25 * this.fadeAlpha;
+
+        mainGradient.addColorStop(0, `rgba(100, 100, 100, ${opacity})`);
+        mainGradient.addColorStop(
+          0.2,
+          `rgba(110, 110, 110, ${opacity * 0.75})`
+        );
+        mainGradient.addColorStop(0.4, `rgba(120, 120, 120, ${opacity * 0.5})`);
+        mainGradient.addColorStop(
+          0.6,
+          `rgba(130, 130, 130, ${opacity * 0.25})`
         );
         mainGradient.addColorStop(
           0.8,
@@ -509,33 +566,6 @@ class SpotlightBackground {
         );
         mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
       }
-    } else {
-      // Hero section - original colors
-      const hue = 280;
-      const saturation = 60 + Math.sin(this.time) * 20;
-      const opacity = isDarkTheme ? 0.4 : 0.2;
-
-      mainGradient.addColorStop(
-        0,
-        `hsla(${hue}, ${saturation}%, 85%, ${opacity})`
-      );
-      mainGradient.addColorStop(
-        0.2,
-        `hsla(${hue}, ${saturation}%, 70%, ${opacity * 0.75})`
-      );
-      mainGradient.addColorStop(
-        0.4,
-        `hsla(${hue}, ${saturation}%, 55%, ${opacity * 0.5})`
-      );
-      mainGradient.addColorStop(
-        0.6,
-        `hsla(${hue}, ${saturation}%, 40%, ${opacity * 0.25})`
-      );
-      mainGradient.addColorStop(
-        0.8,
-        `hsla(${hue}, ${saturation}%, 25%, ${opacity * 0.125})`
-      );
-      mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
     }
 
     // Apply main spotlight
@@ -544,7 +574,7 @@ class SpotlightBackground {
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     // Add secondary light for depth (only for hero section)
-    if (!this.isPortfolio) {
+    if (!this.isPortfolio && isDarkTheme) {
       const secondaryGradient = this.ctx.createRadialGradient(
         this.mouseX,
         this.mouseY,
@@ -554,9 +584,8 @@ class SpotlightBackground {
         this.spotlightRadius * 0.6
       );
 
-      const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
       const secondaryHue = 260;
-      const opacity = isDarkTheme ? 0.4 : 0.2;
+      const opacity = 0.4 * this.fadeAlpha;
 
       secondaryGradient.addColorStop(
         0,
@@ -595,20 +624,26 @@ class SpotlightBackground {
         effect.radius
       );
 
-      const intensity = effect.life * effect.intensity;
+      const intensity = effect.life * effect.intensity * this.fadeAlpha;
       const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
 
       if (this.isPortfolio && !isDarkTheme) {
-        // Light theme click effects for portfolio
-        burstGradient.addColorStop(0, `rgba(60, 60, 60, ${intensity * 0.4})`);
-        burstGradient.addColorStop(0.3, `rgba(80, 80, 80, ${intensity * 0.3})`);
+        // Light theme click effects for portfolio - darker
+        burstGradient.addColorStop(0, `rgba(30, 30, 30, ${intensity * 0.6})`);
+        burstGradient.addColorStop(0.3, `rgba(40, 40, 40, ${intensity * 0.5})`);
+        burstGradient.addColorStop(0.6, `rgba(50, 50, 50, ${intensity * 0.4})`);
+        burstGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      } else if (!this.isPortfolio && !isDarkTheme) {
+        // Light theme click effects for hero - greyish
+        burstGradient.addColorStop(0, `rgba(80, 80, 80, ${intensity * 0.5})`);
+        burstGradient.addColorStop(0.3, `rgba(90, 90, 90, ${intensity * 0.4})`);
         burstGradient.addColorStop(
           0.6,
-          `rgba(100, 100, 100, ${intensity * 0.2})`
+          `rgba(100, 100, 100, ${intensity * 0.3})`
         );
         burstGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
       } else {
-        // Dark theme or hero section click effects
+        // Dark theme click effects
         burstGradient.addColorStop(
           0,
           `rgba(191, 163, 255, ${intensity * 0.8})`
@@ -636,8 +671,12 @@ class SpotlightBackground {
       this.ctx.beginPath();
       this.ctx.arc(effect.x, effect.y, effect.radius * 0.1, 0, 2 * Math.PI);
 
-      if (this.isPortfolio && !isDarkTheme) {
-        this.ctx.fillStyle = `rgba(40, 40, 40, ${intensity})`;
+      if (!isDarkTheme) {
+        if (this.isPortfolio) {
+          this.ctx.fillStyle = `rgba(20, 20, 20, ${intensity})`;
+        } else {
+          this.ctx.fillStyle = `rgba(70, 70, 70, ${intensity})`;
+        }
       } else {
         this.ctx.fillStyle = `rgba(191, 163, 255, ${intensity})`;
       }
@@ -649,8 +688,8 @@ class SpotlightBackground {
     const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
     this.ctx.globalCompositeOperation = "overlay";
     this.ctx.strokeStyle = isDarkTheme
-      ? "rgba(255, 255, 255, 0.02)"
-      : "rgba(0, 0, 0, 0.02)";
+      ? `rgba(255, 255, 255, ${0.02 * this.fadeAlpha})`
+      : `rgba(0, 0, 0, ${0.02 * this.fadeAlpha})`;
     this.ctx.lineWidth = 0.5;
 
     const gridSize = 50;
@@ -691,13 +730,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Hero section spotlight
   const heroCanvas = document.getElementById("fluidCanvas");
   if (heroCanvas) {
-    new SpotlightBackground(heroCanvas, false);
+    heroSpotlight = new SpotlightBackground(heroCanvas, false);
   }
 
   // Portfolio section spotlight
   const portfolioCanvas = document.getElementById("portfolioCanvas");
   if (portfolioCanvas) {
-    new SpotlightBackground(portfolioCanvas, true);
+    portfolioSpotlight = new SpotlightBackground(portfolioCanvas, true);
   }
 });
 
