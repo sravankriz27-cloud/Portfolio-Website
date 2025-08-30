@@ -49,6 +49,27 @@ interactiveSections.forEach((section) => {
   });
 });
 
+// Hide cursor when hovering over form inputs
+document
+  .querySelectorAll(".form-group input, .form-group textarea")
+  .forEach((input) => {
+    input.addEventListener("mouseenter", () => {
+      cursor.classList.add("hide");
+    });
+
+    input.addEventListener("mouseleave", () => {
+      cursor.classList.remove("hide");
+    });
+
+    input.addEventListener("focus", () => {
+      cursor.classList.add("hide");
+    });
+
+    input.addEventListener("blur", () => {
+      cursor.classList.remove("hide");
+    });
+  });
+
 // Hover effects for interactive elements
 document
   .querySelectorAll(
@@ -64,37 +85,54 @@ document
     });
   });
 
-// Tech Stack Animation Control
+// Improved Tech Stack Animation Control
 const techStackTrack = document.querySelector(".tech-stack-track");
 const techStackSection = document.querySelector(".tech-stack-section");
 
-// Add speed control on hover
+let isHoveringTechSection = false;
+let techItemHoverTimeout = null;
+
+// Section-level hover controls
 if (techStackSection && techStackTrack) {
   techStackSection.addEventListener("mouseenter", () => {
+    isHoveringTechSection = true;
     techStackTrack.style.animationDuration = "60s"; // Slow down on hover
   });
 
   techStackSection.addEventListener("mouseleave", () => {
+    isHoveringTechSection = false;
     techStackTrack.style.animationDuration = "30s"; // Normal speed
+    techStackTrack.style.animationPlayState = "running"; // Ensure it's running
   });
 }
 
-// Individual tech item interactions
+// Improved individual tech item interactions with debouncing
 document.querySelectorAll(".tech-item").forEach((item) => {
   item.addEventListener("mouseenter", function () {
-    // Pause the entire animation when hovering over individual items
-    const track = this.closest(".tech-stack-track");
-    if (track) {
-      track.style.animationPlayState = "paused";
+    // Clear any existing timeout
+    if (techItemHoverTimeout) {
+      clearTimeout(techItemHoverTimeout);
+    }
+
+    // Only pause if we're hovering the tech section
+    if (isHoveringTechSection) {
+      const track = this.closest(".tech-stack-track");
+      if (track) {
+        track.style.animationPlayState = "paused";
+      }
     }
   });
 
   item.addEventListener("mouseleave", function () {
-    // Resume animation when leaving individual items
-    const track = this.closest(".tech-stack-track");
-    if (track) {
-      track.style.animationPlayState = "running";
-    }
+    // Use timeout to prevent rapid play/pause cycles
+    techItemHoverTimeout = setTimeout(() => {
+      if (isHoveringTechSection) {
+        const track = this.closest(".tech-stack-track");
+        if (track) {
+          track.style.animationPlayState = "running";
+        }
+      }
+    }, 100); // Small delay to prevent jittery behavior
   });
 });
 
@@ -280,16 +318,17 @@ document.addEventListener("mousedown", function () {
 // Global spotlight management to prevent multiple active spotlights
 let heroSpotlight = null;
 let portfolioSpotlight = null;
+let contactSpotlight = null;
 let activeSpotlight = null;
 
 // Spotlight Effect Background Class
 class SpotlightBackground {
-  constructor(canvas, isPortfolio = false) {
+  constructor(canvas, sectionType = "hero") {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.width = 0;
     this.height = 0;
-    this.isPortfolio = isPortfolio;
+    this.sectionType = sectionType; // "hero", "portfolio", or "contact"
 
     // Mouse tracking
     this.mouseX = 0;
@@ -301,10 +340,10 @@ class SpotlightBackground {
     this.time = 0;
     this.pulseIntensity = 1;
 
-    // Spotlight properties
-    this.spotlightRadius = isPortfolio ? 300 : 400;
-    this.maxSpotlightRadius = isPortfolio ? 400 : 500;
-    this.minSpotlightRadius = isPortfolio ? 250 : 300;
+    // Spotlight properties based on section
+    this.spotlightRadius = this.getSpotlightRadius();
+    this.maxSpotlightRadius = this.getMaxSpotlightRadius();
+    this.minSpotlightRadius = this.getMinSpotlightRadius();
 
     // Click effects
     this.clickEffects = [];
@@ -316,6 +355,39 @@ class SpotlightBackground {
     this.init();
     this.setupEventListeners();
     this.animate();
+  }
+
+  getSpotlightRadius() {
+    switch (this.sectionType) {
+      case "portfolio":
+        return 300;
+      case "contact":
+        return 350;
+      default:
+        return 400; // hero
+    }
+  }
+
+  getMaxSpotlightRadius() {
+    switch (this.sectionType) {
+      case "portfolio":
+        return 400;
+      case "contact":
+        return 450;
+      default:
+        return 500; // hero
+    }
+  }
+
+  getMinSpotlightRadius() {
+    switch (this.sectionType) {
+      case "portfolio":
+        return 250;
+      case "contact":
+        return 275;
+      default:
+        return 300; // hero
+    }
   }
 
   init() {
@@ -337,9 +409,9 @@ class SpotlightBackground {
   }
 
   setupEventListeners() {
-    const parentSection = this.isPortfolio
-      ? document.getElementById("portfolio")
-      : document.getElementById("home");
+    const parentSection = document.getElementById(
+      this.sectionType === "hero" ? "home" : this.sectionType
+    );
 
     if (parentSection) {
       parentSection.addEventListener("mouseenter", () => {
@@ -414,14 +486,27 @@ class SpotlightBackground {
   }
 
   addClickEffect(x, y) {
+    const maxRadius =
+      this.sectionType === "contact"
+        ? 175
+        : this.sectionType === "portfolio"
+        ? 150
+        : 200;
+    const intensity =
+      this.sectionType === "contact"
+        ? 1.3
+        : this.sectionType === "portfolio"
+        ? 1.2
+        : 1.5;
+
     this.clickEffects.push({
       x: x,
       y: y,
       radius: 0,
-      maxRadius: this.isPortfolio ? 150 : 200,
+      maxRadius: maxRadius,
       life: 1.0,
       decay: 0.03,
-      intensity: this.isPortfolio ? 1.2 : 1.5,
+      intensity: intensity,
     });
   }
 
@@ -458,7 +543,13 @@ class SpotlightBackground {
 
     // Animate spotlight radius with subtle pulsing
     this.time += 0.02;
-    const pulse = Math.sin(this.time) * (this.isPortfolio ? 15 : 20);
+    const pulseAmount =
+      this.sectionType === "contact"
+        ? 18
+        : this.sectionType === "portfolio"
+        ? 15
+        : 20;
+    const pulse = Math.sin(this.time) * pulseAmount;
     this.spotlightRadius = this.lerp(
       this.spotlightRadius,
       (this.targetSpotlightRadius || this.maxSpotlightRadius) + pulse,
@@ -468,7 +559,7 @@ class SpotlightBackground {
     // Get current theme for color adaptation
     const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
 
-    // Create main spotlight gradient with theme-aware colors
+    // Create main spotlight gradient with unified colors
     const mainGradient = this.ctx.createRadialGradient(
       this.mouseX,
       this.mouseY,
@@ -478,94 +569,81 @@ class SpotlightBackground {
       this.spotlightRadius
     );
 
-    // Portfolio section uses different colors and intensity
-    if (this.isPortfolio) {
-      if (isDarkTheme) {
-        // Dark theme - purple/violet spotlight
-        const hue = 280;
-        const saturation = 50;
-        const opacity = 0.4 * this.fadeAlpha;
+    // All sections now use the same purple/violet theme in dark mode
+    if (isDarkTheme) {
+      // Dark theme - purple/violet spotlight for all sections
+      const hue = 280;
+      const saturation = this.sectionType === "contact" ? 45 : 50;
+      const baseOpacity = this.sectionType === "contact" ? 0.35 : 0.4;
+      const opacity = baseOpacity * this.fadeAlpha;
 
-        mainGradient.addColorStop(
-          0,
-          `hsla(${hue}, ${saturation}%, 85%, ${opacity})`
-        );
-        mainGradient.addColorStop(
-          0.2,
-          `hsla(${hue}, ${saturation}%, 70%, ${opacity * 0.75})`
-        );
-        mainGradient.addColorStop(
-          0.4,
-          `hsla(${hue}, ${saturation}%, 55%, ${opacity * 0.5})`
-        );
-        mainGradient.addColorStop(
-          0.6,
-          `hsla(${hue}, ${saturation}%, 40%, ${opacity * 0.25})`
-        );
-        mainGradient.addColorStop(
-          0.8,
-          `hsla(${hue}, ${saturation}%, 25%, ${opacity * 0.125})`
-        );
-        mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-      } else {
-        // Light theme - darker grey spotlight
-        const opacity = 0.35 * this.fadeAlpha;
-
-        mainGradient.addColorStop(0, `rgba(40, 40, 40, ${opacity})`);
-        mainGradient.addColorStop(0.2, `rgba(50, 50, 50, ${opacity * 0.75})`);
-        mainGradient.addColorStop(0.4, `rgba(60, 60, 60, ${opacity * 0.5})`);
-        mainGradient.addColorStop(0.6, `rgba(70, 70, 70, ${opacity * 0.25})`);
-        mainGradient.addColorStop(0.8, `rgba(80, 80, 80, ${opacity * 0.125})`);
-        mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-      }
+      mainGradient.addColorStop(
+        0,
+        `hsla(${hue}, ${saturation}%, 85%, ${opacity})`
+      );
+      mainGradient.addColorStop(
+        0.2,
+        `hsla(${hue}, ${saturation}%, 70%, ${opacity * 0.75})`
+      );
+      mainGradient.addColorStop(
+        0.4,
+        `hsla(${hue}, ${saturation}%, 55%, ${opacity * 0.5})`
+      );
+      mainGradient.addColorStop(
+        0.6,
+        `hsla(${hue}, ${saturation}%, 40%, ${opacity * 0.25})`
+      );
+      mainGradient.addColorStop(
+        0.8,
+        `hsla(${hue}, ${saturation}%, 25%, ${opacity * 0.125})`
+      );
+      mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
     } else {
-      // Hero section - greyish spotlight in light mode
-      if (isDarkTheme) {
-        const hue = 280;
-        const saturation = 60 + Math.sin(this.time) * 20;
-        const opacity = 0.4 * this.fadeAlpha;
+      // Light theme - darker grey spotlight for all sections
+      const baseOpacity =
+        this.sectionType === "contact"
+          ? 0.3
+          : this.sectionType === "portfolio"
+          ? 0.35
+          : 0.25;
+      const opacity = baseOpacity * this.fadeAlpha;
 
-        mainGradient.addColorStop(
-          0,
-          `hsla(${hue}, ${saturation}%, 85%, ${opacity})`
-        );
-        mainGradient.addColorStop(
-          0.2,
-          `hsla(${hue}, ${saturation}%, 70%, ${opacity * 0.75})`
-        );
-        mainGradient.addColorStop(
-          0.4,
-          `hsla(${hue}, ${saturation}%, 55%, ${opacity * 0.5})`
-        );
-        mainGradient.addColorStop(
-          0.6,
-          `hsla(${hue}, ${saturation}%, 40%, ${opacity * 0.25})`
-        );
-        mainGradient.addColorStop(
-          0.8,
-          `hsla(${hue}, ${saturation}%, 25%, ${opacity * 0.125})`
-        );
-        mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-      } else {
-        // Light theme - greyish spotlight for hero
-        const opacity = 0.25 * this.fadeAlpha;
+      const baseGray =
+        this.sectionType === "contact"
+          ? 45
+          : this.sectionType === "portfolio"
+          ? 40
+          : 100;
 
-        mainGradient.addColorStop(0, `rgba(100, 100, 100, ${opacity})`);
-        mainGradient.addColorStop(
-          0.2,
-          `rgba(110, 110, 110, ${opacity * 0.75})`
-        );
-        mainGradient.addColorStop(0.4, `rgba(120, 120, 120, ${opacity * 0.5})`);
-        mainGradient.addColorStop(
-          0.6,
-          `rgba(130, 130, 130, ${opacity * 0.25})`
-        );
-        mainGradient.addColorStop(
-          0.8,
-          `rgba(140, 140, 140, ${opacity * 0.125})`
-        );
-        mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-      }
+      mainGradient.addColorStop(
+        0,
+        `rgba(${baseGray}, ${baseGray}, ${baseGray}, ${opacity})`
+      );
+      mainGradient.addColorStop(
+        0.2,
+        `rgba(${baseGray + 10}, ${baseGray + 10}, ${baseGray + 10}, ${
+          opacity * 0.75
+        })`
+      );
+      mainGradient.addColorStop(
+        0.4,
+        `rgba(${baseGray + 20}, ${baseGray + 20}, ${baseGray + 20}, ${
+          opacity * 0.5
+        })`
+      );
+      mainGradient.addColorStop(
+        0.6,
+        `rgba(${baseGray + 30}, ${baseGray + 30}, ${baseGray + 30}, ${
+          opacity * 0.25
+        })`
+      );
+      mainGradient.addColorStop(
+        0.8,
+        `rgba(${baseGray + 40}, ${baseGray + 40}, ${baseGray + 40}, ${
+          opacity * 0.125
+        })`
+      );
+      mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
     }
 
     // Apply main spotlight
@@ -573,8 +651,8 @@ class SpotlightBackground {
     this.ctx.fillStyle = mainGradient;
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // Add secondary light for depth (only for hero section)
-    if (!this.isPortfolio && isDarkTheme) {
+    // Add secondary light for depth (only for hero section in dark theme)
+    if (this.sectionType === "hero" && isDarkTheme) {
       const secondaryGradient = this.ctx.createRadialGradient(
         this.mouseX,
         this.mouseY,
@@ -608,7 +686,7 @@ class SpotlightBackground {
     this.ctx.globalCompositeOperation = "source-over";
 
     // Add subtle grid pattern for texture (only for hero)
-    if (!this.isPortfolio) {
+    if (this.sectionType === "hero") {
       this.drawGridPattern();
     }
   }
@@ -627,23 +705,34 @@ class SpotlightBackground {
       const intensity = effect.life * effect.intensity * this.fadeAlpha;
       const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
 
-      if (this.isPortfolio && !isDarkTheme) {
-        // Light theme click effects for portfolio - darker
-        burstGradient.addColorStop(0, `rgba(30, 30, 30, ${intensity * 0.6})`);
-        burstGradient.addColorStop(0.3, `rgba(40, 40, 40, ${intensity * 0.5})`);
-        burstGradient.addColorStop(0.6, `rgba(50, 50, 50, ${intensity * 0.4})`);
-        burstGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
-      } else if (!this.isPortfolio && !isDarkTheme) {
-        // Light theme click effects for hero - greyish
-        burstGradient.addColorStop(0, `rgba(80, 80, 80, ${intensity * 0.5})`);
-        burstGradient.addColorStop(0.3, `rgba(90, 90, 90, ${intensity * 0.4})`);
+      if (!isDarkTheme) {
+        // Light theme click effects - darker for all sections
+        const grayBase =
+          this.sectionType === "contact"
+            ? 25
+            : this.sectionType === "portfolio"
+            ? 30
+            : 80;
+
+        burstGradient.addColorStop(
+          0,
+          `rgba(${grayBase}, ${grayBase}, ${grayBase}, ${intensity * 0.6})`
+        );
+        burstGradient.addColorStop(
+          0.3,
+          `rgba(${grayBase + 10}, ${grayBase + 10}, ${grayBase + 10}, ${
+            intensity * 0.5
+          })`
+        );
         burstGradient.addColorStop(
           0.6,
-          `rgba(100, 100, 100, ${intensity * 0.3})`
+          `rgba(${grayBase + 20}, ${grayBase + 20}, ${grayBase + 20}, ${
+            intensity * 0.4
+          })`
         );
         burstGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
       } else {
-        // Dark theme click effects
+        // Dark theme click effects - purple for all sections
         burstGradient.addColorStop(
           0,
           `rgba(191, 163, 255, ${intensity * 0.8})`
@@ -672,11 +761,13 @@ class SpotlightBackground {
       this.ctx.arc(effect.x, effect.y, effect.radius * 0.1, 0, 2 * Math.PI);
 
       if (!isDarkTheme) {
-        if (this.isPortfolio) {
-          this.ctx.fillStyle = `rgba(20, 20, 20, ${intensity})`;
-        } else {
-          this.ctx.fillStyle = `rgba(70, 70, 70, ${intensity})`;
-        }
+        const centerGray =
+          this.sectionType === "contact"
+            ? 15
+            : this.sectionType === "portfolio"
+            ? 20
+            : 70;
+        this.ctx.fillStyle = `rgba(${centerGray}, ${centerGray}, ${centerGray}, ${intensity})`;
       } else {
         this.ctx.fillStyle = `rgba(191, 163, 255, ${intensity})`;
       }
@@ -730,13 +821,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // Hero section spotlight
   const heroCanvas = document.getElementById("fluidCanvas");
   if (heroCanvas) {
-    heroSpotlight = new SpotlightBackground(heroCanvas, false);
+    heroSpotlight = new SpotlightBackground(heroCanvas, "hero");
   }
 
   // Portfolio section spotlight
   const portfolioCanvas = document.getElementById("portfolioCanvas");
   if (portfolioCanvas) {
-    portfolioSpotlight = new SpotlightBackground(portfolioCanvas, true);
+    portfolioSpotlight = new SpotlightBackground(portfolioCanvas, "portfolio");
+  }
+
+  // Contact section spotlight
+  const contactCanvas = document.getElementById("contactCanvas");
+  if (contactCanvas) {
+    contactSpotlight = new SpotlightBackground(contactCanvas, "contact");
   }
 });
 
