@@ -315,20 +315,13 @@ document.addEventListener("mousedown", function () {
   document.body.classList.remove("keyboard-navigation");
 });
 
-// Global spotlight management to prevent multiple active spotlights
-let heroSpotlight = null;
-let portfolioSpotlight = null;
-let contactSpotlight = null;
-let activeSpotlight = null;
-
-// Spotlight Effect Background Class
-class SpotlightBackground {
-  constructor(canvas, sectionType = "hero") {
+// Global Spotlight Background Class
+class GlobalSpotlightBackground {
+  constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.width = 0;
     this.height = 0;
-    this.sectionType = sectionType; // "hero", "portfolio", or "contact"
 
     // Mouse tracking
     this.mouseX = 0;
@@ -338,12 +331,13 @@ class SpotlightBackground {
 
     // Animation properties
     this.time = 0;
-    this.pulseIntensity = 1;
 
-    // Spotlight properties based on section
-    this.spotlightRadius = this.getSpotlightRadius();
-    this.maxSpotlightRadius = this.getMaxSpotlightRadius();
-    this.minSpotlightRadius = this.getMinSpotlightRadius();
+    // Spotlight properties - adaptive based on current section
+    this.currentSection = "none";
+    this.spotlightRadius = 350;
+    this.targetSpotlightRadius = 350;
+    this.maxSpotlightRadius = 450;
+    this.minSpotlightRadius = 200;
 
     // Click effects
     this.clickEffects = [];
@@ -352,42 +346,19 @@ class SpotlightBackground {
     this.isActive = false;
     this.fadeAlpha = 0; // For smooth transitions
 
+    // Section detection
+    this.heroSection = document.getElementById("home");
+    this.portfolioSection = document.getElementById("portfolio");
+    this.contactSection = document.getElementById("contact");
+    this.interactiveSections = [
+      this.heroSection,
+      this.portfolioSection,
+      this.contactSection,
+    ];
+
     this.init();
     this.setupEventListeners();
     this.animate();
-  }
-
-  getSpotlightRadius() {
-    switch (this.sectionType) {
-      case "portfolio":
-        return 300;
-      case "contact":
-        return 350;
-      default:
-        return 400; // hero
-    }
-  }
-
-  getMaxSpotlightRadius() {
-    switch (this.sectionType) {
-      case "portfolio":
-        return 400;
-      case "contact":
-        return 450;
-      default:
-        return 500; // hero
-    }
-  }
-
-  getMinSpotlightRadius() {
-    switch (this.sectionType) {
-      case "portfolio":
-        return 250;
-      case "contact":
-        return 275;
-      default:
-        return 300; // hero
-    }
   }
 
   init() {
@@ -396,8 +367,8 @@ class SpotlightBackground {
   }
 
   resize() {
-    this.width = this.canvas.offsetWidth;
-    this.height = this.canvas.offsetHeight;
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
     this.canvas.width = this.width;
     this.canvas.height = this.height;
 
@@ -408,96 +379,128 @@ class SpotlightBackground {
     this.targetMouseY = this.mouseY;
   }
 
-  setupEventListeners() {
-    const parentSection = document.getElementById(
-      this.sectionType === "hero" ? "home" : this.sectionType
-    );
+  getCurrentSection() {
+    const scrollY = window.pageYOffset;
+    const sections = [
+      { name: "hero", element: this.heroSection },
+      { name: "portfolio", element: this.portfolioSection },
+      { name: "contact", element: this.contactSection },
+    ];
 
-    if (parentSection) {
-      parentSection.addEventListener("mouseenter", () => {
-        this.activateSpotlight();
-      });
+    for (let section of sections) {
+      if (section.element) {
+        const rect = section.element.getBoundingClientRect();
+        const elementTop = scrollY + rect.top;
+        const elementBottom = elementTop + rect.height;
 
-      parentSection.addEventListener("mouseleave", () => {
-        this.deactivateSpotlight();
-      });
-
-      // Global mouse move listener for better tracking
-      document.addEventListener("mousemove", (e) => {
-        if (this.isActive) {
-          const rect = this.canvas.getBoundingClientRect();
-          this.targetMouseX = e.clientX - rect.left;
-          this.targetMouseY = e.clientY - rect.top;
+        // Check if section is in viewport with some buffer
+        if (
+          scrollY + window.innerHeight * 0.3 >= elementTop &&
+          scrollY + window.innerHeight * 0.7 <= elementBottom
+        ) {
+          return section.name;
         }
-      });
-
-      parentSection.addEventListener("click", (e) => {
-        if (this.isActive) {
-          const rect = this.canvas.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          this.addClickEffect(x, y);
-        }
-      });
+      }
     }
+
+    return "none";
+  }
+
+  setupEventListeners() {
+    // Global mouse move listener for seamless tracking
+    document.addEventListener("mousemove", (e) => {
+      this.targetMouseX = e.clientX;
+      this.targetMouseY = e.clientY;
+    });
+
+    // Enhanced section detection using scroll and mouse position
+    const checkSectionAndActivate = () => {
+      const newSection = this.getCurrentSection();
+      const mouseOverInteractive = this.interactiveSections.some((section) => {
+        if (!section) return false;
+        const rect = section.getBoundingClientRect();
+        return (
+          this.targetMouseX >= rect.left &&
+          this.targetMouseX <= rect.right &&
+          this.targetMouseY >= rect.top &&
+          this.targetMouseY <= rect.bottom
+        );
+      });
+
+      if (newSection !== "none" && mouseOverInteractive) {
+        this.currentSection = newSection;
+        this.activateSpotlight();
+      } else {
+        this.deactivateSpotlight();
+      }
+    };
+
+    // Check on mouse move and scroll
+    document.addEventListener("mousemove", checkSectionAndActivate);
+    window.addEventListener("scroll", checkSectionAndActivate);
 
     // Touch support
-    if (parentSection) {
-      parentSection.addEventListener("touchmove", (e) => {
-        if (this.isActive) {
+    document.addEventListener(
+      "touchmove",
+      (e) => {
+        if (this.isActive && e.touches.length > 0) {
           e.preventDefault();
-          const rect = this.canvas.getBoundingClientRect();
           const touch = e.touches[0];
-          this.targetMouseX = touch.clientX - rect.left;
-          this.targetMouseY = touch.clientY - rect.top;
+          this.targetMouseX = touch.clientX;
+          this.targetMouseY = touch.clientY;
         }
-      });
+      },
+      { passive: false }
+    );
 
-      parentSection.addEventListener("touchstart", (e) => {
-        if (this.isActive) {
+    // Click effects
+    document.addEventListener("click", (e) => {
+      if (this.isActive) {
+        this.addClickEffect(e.clientX, e.clientY);
+      }
+    });
+
+    document.addEventListener(
+      "touchstart",
+      (e) => {
+        if (this.isActive && e.touches.length > 0) {
           e.preventDefault();
-          const rect = this.canvas.getBoundingClientRect();
           const touch = e.touches[0];
-          const x = touch.clientX - rect.left;
-          const y = touch.clientY - rect.top;
-          this.addClickEffect(x, y);
+          this.addClickEffect(touch.clientX, touch.clientY);
         }
-      });
-    }
+      },
+      { passive: false }
+    );
   }
 
   activateSpotlight() {
-    // Deactivate other spotlights first
-    if (activeSpotlight && activeSpotlight !== this) {
-      activeSpotlight.deactivateSpotlight();
-    }
-
     this.isActive = true;
-    activeSpotlight = this;
-    this.targetSpotlightRadius = this.maxSpotlightRadius;
+
+    // Adjust spotlight properties based on current section
+    switch (this.currentSection) {
+      case "hero":
+        this.targetSpotlightRadius = 400;
+        break;
+      case "portfolio":
+        this.targetSpotlightRadius = 350;
+        break;
+      case "contact":
+        this.targetSpotlightRadius = 375;
+        break;
+      default:
+        this.targetSpotlightRadius = 350;
+    }
   }
 
   deactivateSpotlight() {
     this.isActive = false;
-    if (activeSpotlight === this) {
-      activeSpotlight = null;
-    }
+    this.currentSection = "none";
     this.targetSpotlightRadius = this.minSpotlightRadius;
   }
 
   addClickEffect(x, y) {
-    const maxRadius =
-      this.sectionType === "contact"
-        ? 175
-        : this.sectionType === "portfolio"
-        ? 150
-        : 200;
-    const intensity =
-      this.sectionType === "contact"
-        ? 1.3
-        : this.sectionType === "portfolio"
-        ? 1.2
-        : 1.5;
+    const maxRadius = this.currentSection === "hero" ? 200 : 150;
+    const intensity = this.currentSection === "hero" ? 1.5 : 1.2;
 
     this.clickEffects.push({
       x: x,
@@ -526,9 +529,9 @@ class SpotlightBackground {
   drawSpotlight() {
     // Smooth fade in/out
     if (this.isActive) {
-      this.fadeAlpha = Math.min(1, this.fadeAlpha + 0.05);
+      this.fadeAlpha = Math.min(1, this.fadeAlpha + 0.03);
     } else {
-      this.fadeAlpha = Math.max(0, this.fadeAlpha - 0.05);
+      this.fadeAlpha = Math.max(0, this.fadeAlpha - 0.03);
     }
 
     // Clear canvas first
@@ -537,29 +540,24 @@ class SpotlightBackground {
     // Don't draw if completely faded out
     if (this.fadeAlpha <= 0) return;
 
-    // Smooth mouse following
-    this.mouseX = this.lerp(this.mouseX, this.targetMouseX, 0.08);
-    this.mouseY = this.lerp(this.mouseY, this.targetMouseY, 0.08);
+    // Smooth mouse following - more responsive for better transition
+    this.mouseX = this.lerp(this.mouseX, this.targetMouseX, 0.12);
+    this.mouseY = this.lerp(this.mouseY, this.targetMouseY, 0.12);
 
     // Animate spotlight radius with subtle pulsing
-    this.time += 0.02;
-    const pulseAmount =
-      this.sectionType === "contact"
-        ? 18
-        : this.sectionType === "portfolio"
-        ? 15
-        : 20;
+    this.time += 0.015;
+    const pulseAmount = 15;
     const pulse = Math.sin(this.time) * pulseAmount;
     this.spotlightRadius = this.lerp(
       this.spotlightRadius,
-      (this.targetSpotlightRadius || this.maxSpotlightRadius) + pulse,
-      0.05
+      this.targetSpotlightRadius + pulse,
+      0.06
     );
 
     // Get current theme for color adaptation
     const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
 
-    // Create main spotlight gradient with unified colors
+    // Create main spotlight gradient
     const mainGradient = this.ctx.createRadialGradient(
       this.mouseX,
       this.mouseY,
@@ -569,12 +567,11 @@ class SpotlightBackground {
       this.spotlightRadius
     );
 
-    // All sections now use the same purple/violet theme in dark mode
     if (isDarkTheme) {
       // Dark theme - purple/violet spotlight for all sections
       const hue = 280;
-      const saturation = this.sectionType === "contact" ? 45 : 50;
-      const baseOpacity = this.sectionType === "contact" ? 0.35 : 0.4;
+      const saturation = 45;
+      const baseOpacity = this.currentSection === "hero" ? 0.35 : 0.4;
       const opacity = baseOpacity * this.fadeAlpha;
 
       mainGradient.addColorStop(
@@ -599,21 +596,10 @@ class SpotlightBackground {
       );
       mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
     } else {
-      // Light theme - darker grey spotlight for all sections
-      const baseOpacity =
-        this.sectionType === "contact"
-          ? 0.3
-          : this.sectionType === "portfolio"
-          ? 0.35
-          : 0.25;
+      // Light theme - darker grey spotlight for all sections (same as portfolio)
+      const baseOpacity = 0.3;
       const opacity = baseOpacity * this.fadeAlpha;
-
-      const baseGray =
-        this.sectionType === "contact"
-          ? 45
-          : this.sectionType === "portfolio"
-          ? 40
-          : 100;
+      const baseGray = 40; // Same gray value for all sections
 
       mainGradient.addColorStop(
         0,
@@ -652,7 +638,7 @@ class SpotlightBackground {
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     // Add secondary light for depth (only for hero section in dark theme)
-    if (this.sectionType === "hero" && isDarkTheme) {
+    if (this.currentSection === "hero" && isDarkTheme) {
       const secondaryGradient = this.ctx.createRadialGradient(
         this.mouseX,
         this.mouseY,
@@ -686,7 +672,7 @@ class SpotlightBackground {
     this.ctx.globalCompositeOperation = "source-over";
 
     // Add subtle grid pattern for texture (only for hero)
-    if (this.sectionType === "hero") {
+    if (this.currentSection === "hero") {
       this.drawGridPattern();
     }
   }
@@ -706,13 +692,8 @@ class SpotlightBackground {
       const isDarkTheme = document.body.getAttribute("data-theme") !== "light";
 
       if (!isDarkTheme) {
-        // Light theme click effects - darker for all sections
-        const grayBase =
-          this.sectionType === "contact"
-            ? 25
-            : this.sectionType === "portfolio"
-            ? 30
-            : 80;
+        // Light theme click effects - same gray for all sections
+        const grayBase = 30;
 
         burstGradient.addColorStop(
           0,
@@ -761,12 +742,7 @@ class SpotlightBackground {
       this.ctx.arc(effect.x, effect.y, effect.radius * 0.1, 0, 2 * Math.PI);
 
       if (!isDarkTheme) {
-        const centerGray =
-          this.sectionType === "contact"
-            ? 15
-            : this.sectionType === "portfolio"
-            ? 20
-            : 70;
+        const centerGray = 20;
         this.ctx.fillStyle = `rgba(${centerGray}, ${centerGray}, ${centerGray}, ${intensity})`;
       } else {
         this.ctx.fillStyle = `rgba(191, 163, 255, ${intensity})`;
@@ -816,25 +792,16 @@ class SpotlightBackground {
   }
 }
 
-// Initialize spotlight backgrounds when page loads
+// Initialize global spotlight when page loads
+let globalSpotlight = null;
+
 document.addEventListener("DOMContentLoaded", () => {
-  // Hero section spotlight
-  const heroCanvas = document.getElementById("fluidCanvas");
-  if (heroCanvas) {
-    heroSpotlight = new SpotlightBackground(heroCanvas, "hero");
-  }
-
-  // Portfolio section spotlight
-  const portfolioCanvas = document.getElementById("portfolioCanvas");
-  if (portfolioCanvas) {
-    portfolioSpotlight = new SpotlightBackground(portfolioCanvas, "portfolio");
-  }
-
-  // Contact section spotlight
-  const contactCanvas = document.getElementById("contactCanvas");
-  if (contactCanvas) {
-    contactSpotlight = new SpotlightBackground(contactCanvas, "contact");
+  const globalCanvas = document.getElementById("globalSpotlightCanvas");
+  if (globalCanvas) {
+    globalSpotlight = new GlobalSpotlightBackground(globalCanvas);
   }
 });
 
-console.log("Enhanced portfolio website loaded successfully!");
+console.log(
+  "Enhanced portfolio website with seamless spotlight loaded successfully!"
+);
