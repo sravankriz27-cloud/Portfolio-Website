@@ -10,80 +10,85 @@ themeToggle.addEventListener("click", () => {
   body.setAttribute("data-theme", currentTheme);
 });
 
-// Custom Cursor
-const cursor = document.querySelector(".custom-cursor");
-const interactiveSections = document.querySelectorAll(".cursor-interactive");
+// Detect if device supports fine pointer (desktop)
+const isFinePointer = window.matchMedia("(pointer: fine)").matches;
 
-let mouseX = 0;
-let mouseY = 0;
-let cursorX = 0;
-let cursorY = 0;
+// Custom Cursor (only for desktop)
+if (isFinePointer) {
+  const cursor = document.querySelector(".custom-cursor");
+  const interactiveSections = document.querySelectorAll(".cursor-interactive");
 
-// Update mouse position
-document.addEventListener("mousemove", (e) => {
-  mouseX = e.clientX;
-  mouseY = e.clientY;
-});
+  let mouseX = 0;
+  let mouseY = 0;
+  let cursorX = 0;
+  let cursorY = 0;
 
-// Smooth cursor animation
-function animateCursor() {
-  cursorX += (mouseX - cursorX) * 0.1;
-  cursorY += (mouseY - cursorY) * 0.1;
-  cursor.style.left = cursorX + "px";
-  cursor.style.top = cursorY + "px";
-  requestAnimationFrame(animateCursor);
-}
-animateCursor();
-
-// Show/hide cursor in interactive sections
-interactiveSections.forEach((section) => {
-  section.addEventListener("mouseenter", () => {
-    cursor.style.opacity = "1";
-    section.style.cursor = "none";
+  // Update mouse position
+  document.addEventListener("mousemove", (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
   });
 
-  section.addEventListener("mouseleave", () => {
-    cursor.style.opacity = "0";
-    section.style.cursor = "auto";
-    cursor.classList.remove("hover");
-  });
-});
+  // Smooth cursor animation
+  function animateCursor() {
+    cursorX += (mouseX - cursorX) * 0.1;
+    cursorY += (mouseY - cursorY) * 0.1;
+    cursor.style.left = cursorX + "px";
+    cursor.style.top = cursorY + "px";
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
 
-// Hide cursor when hovering over form inputs
-document
-  .querySelectorAll(".form-group input, .form-group textarea")
-  .forEach((input) => {
-    input.addEventListener("mouseenter", () => {
-      cursor.classList.add("hide");
+  // Show/hide cursor in interactive sections
+  interactiveSections.forEach((section) => {
+    section.addEventListener("mouseenter", () => {
+      cursor.style.opacity = "1";
+      section.style.cursor = "none";
     });
 
-    input.addEventListener("mouseleave", () => {
-      cursor.classList.remove("hide");
-    });
-
-    input.addEventListener("focus", () => {
-      cursor.classList.add("hide");
-    });
-
-    input.addEventListener("blur", () => {
-      cursor.classList.remove("hide");
-    });
-  });
-
-// Hover effects for interactive elements
-document
-  .querySelectorAll(
-    ".portfolio-item, .contact-form, .view-portfolio-btn, .submit-btn"
-  )
-  .forEach((item) => {
-    item.addEventListener("mouseenter", () => {
-      cursor.classList.add("hover");
-    });
-
-    item.addEventListener("mouseleave", () => {
+    section.addEventListener("mouseleave", () => {
+      cursor.style.opacity = "0";
+      section.style.cursor = "auto";
       cursor.classList.remove("hover");
     });
   });
+
+  // Hide cursor when hovering over form inputs
+  document
+    .querySelectorAll(".form-group input, .form-group textarea")
+    .forEach((input) => {
+      input.addEventListener("mouseenter", () => {
+        cursor.classList.add("hide");
+      });
+
+      input.addEventListener("mouseleave", () => {
+        cursor.classList.remove("hide");
+      });
+
+      input.addEventListener("focus", () => {
+        cursor.classList.add("hide");
+      });
+
+      input.addEventListener("blur", () => {
+        cursor.classList.remove("hide");
+      });
+    });
+
+  // Hover effects for interactive elements
+  document
+    .querySelectorAll(
+      ".portfolio-item, .contact-form, .view-portfolio-btn, .submit-btn"
+    )
+    .forEach((item) => {
+      item.addEventListener("mouseenter", () => {
+        cursor.classList.add("hover");
+      });
+
+      item.addEventListener("mouseleave", () => {
+        cursor.classList.remove("hover");
+      });
+    });
+}
 
 // Improved Tech Stack Animation Control
 const techStackTrack = document.querySelector(".tech-stack-track");
@@ -92,8 +97,8 @@ const techStackSection = document.querySelector(".tech-stack-section");
 let isHoveringTechSection = false;
 let techItemHoverTimeout = null;
 
-// Section-level hover controls
-if (techStackSection && techStackTrack) {
+// Section-level hover controls (only on desktop)
+if (techStackSection && techStackTrack && isFinePointer) {
   techStackSection.addEventListener("mouseenter", () => {
     isHoveringTechSection = true;
     techStackTrack.style.animationDuration = "60s"; // Slow down on hover
@@ -104,37 +109,37 @@ if (techStackSection && techStackTrack) {
     techStackTrack.style.animationDuration = "30s"; // Normal speed
     techStackTrack.style.animationPlayState = "running"; // Ensure it's running
   });
-}
 
-// Improved individual tech item interactions with debouncing
-document.querySelectorAll(".tech-item").forEach((item) => {
-  item.addEventListener("mouseenter", function () {
-    // Clear any existing timeout
-    if (techItemHoverTimeout) {
-      clearTimeout(techItemHoverTimeout);
-    }
-
-    // Only pause if we're hovering the tech section
-    if (isHoveringTechSection) {
-      const track = this.closest(".tech-stack-track");
-      if (track) {
-        track.style.animationPlayState = "paused";
+  // Improved individual tech item interactions with debouncing
+  document.querySelectorAll(".tech-item").forEach((item) => {
+    item.addEventListener("mouseenter", function () {
+      // Clear any existing timeout
+      if (techItemHoverTimeout) {
+        clearTimeout(techItemHoverTimeout);
       }
-    }
-  });
 
-  item.addEventListener("mouseleave", function () {
-    // Use timeout to prevent rapid play/pause cycles
-    techItemHoverTimeout = setTimeout(() => {
+      // Only pause if we're hovering the tech section
       if (isHoveringTechSection) {
         const track = this.closest(".tech-stack-track");
         if (track) {
-          track.style.animationPlayState = "running";
+          track.style.animationPlayState = "paused";
         }
       }
-    }, 100); // Small delay to prevent jittery behavior
+    });
+
+    item.addEventListener("mouseleave", function () {
+      // Use timeout to prevent rapid play/pause cycles
+      techItemHoverTimeout = setTimeout(() => {
+        if (isHoveringTechSection) {
+          const track = this.closest(".tech-stack-track");
+          if (track) {
+            track.style.animationPlayState = "running";
+          }
+        }
+      }, 100); // Small delay to prevent jittery behavior
+    });
   });
-});
+}
 
 // Smooth scrolling for navigation links
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
@@ -169,19 +174,23 @@ document.querySelectorAll(".fade-in").forEach((el) => {
   observer.observe(el);
 });
 
-// Enhanced portfolio item interactions
+// Enhanced portfolio item interactions (only on desktop)
+if (isFinePointer) {
+  document.querySelectorAll(".portfolio-item").forEach((item) => {
+    item.addEventListener("mouseenter", function () {
+      this.style.transform = "translateY(-10px) scale(1.02)";
+      this.style.boxShadow = "0 20px 40px rgba(154, 77, 255, 0.15)";
+    });
+
+    item.addEventListener("mouseleave", function () {
+      this.style.transform = "translateY(0) scale(1)";
+      this.style.boxShadow = "none";
+    });
+  });
+}
+
+// Add click event for portfolio items (works on all devices)
 document.querySelectorAll(".portfolio-item").forEach((item) => {
-  item.addEventListener("mouseenter", function () {
-    this.style.transform = "translateY(-10px) scale(1.02)";
-    this.style.boxShadow = "0 20px 40px rgba(154, 77, 255, 0.15)";
-  });
-
-  item.addEventListener("mouseleave", function () {
-    this.style.transform = "translateY(0) scale(1)";
-    this.style.boxShadow = "none";
-  });
-
-  // Add click event for portfolio items
   item.addEventListener("click", function () {
     console.log(
       "Portfolio item clicked:",
@@ -356,6 +365,9 @@ class GlobalSpotlightBackground {
       this.contactSection,
     ];
 
+    // Device detection
+    this.isMobile = !window.matchMedia("(pointer: fine)").matches;
+
     this.init();
     this.setupEventListeners();
     this.animate();
@@ -407,70 +419,99 @@ class GlobalSpotlightBackground {
   }
 
   setupEventListeners() {
-    // Global mouse move listener for seamless tracking
-    document.addEventListener("mousemove", (e) => {
-      this.targetMouseX = e.clientX;
-      this.targetMouseY = e.clientY;
-    });
+    // Desktop mouse move listener
+    if (!this.isMobile) {
+      document.addEventListener("mousemove", (e) => {
+        this.targetMouseX = e.clientX;
+        this.targetMouseY = e.clientY;
+      });
+    }
 
     // Enhanced section detection using scroll and mouse position
     const checkSectionAndActivate = () => {
       const newSection = this.getCurrentSection();
-      const mouseOverInteractive = this.interactiveSections.some((section) => {
-        if (!section) return false;
-        const rect = section.getBoundingClientRect();
-        return (
-          this.targetMouseX >= rect.left &&
-          this.targetMouseX <= rect.right &&
-          this.targetMouseY >= rect.top &&
-          this.targetMouseY <= rect.bottom
-        );
-      });
 
-      if (newSection !== "none" && mouseOverInteractive) {
-        this.currentSection = newSection;
-        this.activateSpotlight();
+      if (!this.isMobile) {
+        // Desktop: Check mouse position over interactive sections
+        const mouseOverInteractive = this.interactiveSections.some(
+          (section) => {
+            if (!section) return false;
+            const rect = section.getBoundingClientRect();
+            return (
+              this.targetMouseX >= rect.left &&
+              this.targetMouseX <= rect.right &&
+              this.targetMouseY >= rect.top &&
+              this.targetMouseY <= rect.bottom
+            );
+          }
+        );
+
+        if (newSection !== "none" && mouseOverInteractive) {
+          this.currentSection = newSection;
+          this.activateSpotlight();
+        } else {
+          this.deactivateSpotlight();
+        }
       } else {
-        this.deactivateSpotlight();
+        // Mobile: Only activate based on section visibility
+        if (newSection !== "none") {
+          this.currentSection = newSection;
+          this.activateSpotlight();
+          // For mobile, set mouse position to center of screen
+          this.targetMouseX = this.width / 2;
+          this.targetMouseY = this.height / 2;
+        } else {
+          this.deactivateSpotlight();
+        }
       }
     };
 
-    // Check on mouse move and scroll
-    document.addEventListener("mousemove", checkSectionAndActivate);
+    // Check on scroll (both desktop and mobile)
     window.addEventListener("scroll", checkSectionAndActivate);
 
-    // Touch support
-    document.addEventListener(
-      "touchmove",
-      (e) => {
-        if (this.isActive && e.touches.length > 0) {
-          e.preventDefault();
-          const touch = e.touches[0];
-          this.targetMouseX = touch.clientX;
-          this.targetMouseY = touch.clientY;
-        }
-      },
-      { passive: false }
-    );
+    // Check on mouse move (desktop only)
+    if (!this.isMobile) {
+      document.addEventListener("mousemove", checkSectionAndActivate);
+    }
 
-    // Click effects
-    document.addEventListener("click", (e) => {
-      if (this.isActive) {
-        this.addClickEffect(e.clientX, e.clientY);
-      }
-    });
+    // Fixed touch support for mobile - REMOVED preventDefault()
+    if (this.isMobile) {
+      document.addEventListener(
+        "touchmove",
+        (e) => {
+          if (this.isActive && e.touches.length > 0) {
+            // DO NOT prevent default - this was causing the scroll issue
+            const touch = e.touches[0];
+            this.targetMouseX = touch.clientX;
+            this.targetMouseY = touch.clientY;
+          }
+        },
+        { passive: true }
+      ); // Use passive listener for better performance
 
-    document.addEventListener(
-      "touchstart",
-      (e) => {
-        if (this.isActive && e.touches.length > 0) {
-          e.preventDefault();
-          const touch = e.touches[0];
-          this.addClickEffect(touch.clientX, touch.clientY);
+      document.addEventListener(
+        "touchstart",
+        (e) => {
+          if (this.isActive && e.touches.length > 0) {
+            // DO NOT prevent default - this was causing the scroll issue
+            const touch = e.touches[0];
+            this.targetMouseX = touch.clientX;
+            this.targetMouseY = touch.clientY;
+            this.addClickEffect(touch.clientX, touch.clientY);
+          }
+        },
+        { passive: true }
+      ); // Use passive listener for better performance
+    }
+
+    // Click effects for desktop
+    if (!this.isMobile) {
+      document.addEventListener("click", (e) => {
+        if (this.isActive) {
+          this.addClickEffect(e.clientX, e.clientY);
         }
-      },
-      { passive: false }
-    );
+      });
+    }
   }
 
   activateSpotlight() {
@@ -479,16 +520,16 @@ class GlobalSpotlightBackground {
     // Adjust spotlight properties based on current section
     switch (this.currentSection) {
       case "hero":
-        this.targetSpotlightRadius = 400;
+        this.targetSpotlightRadius = this.isMobile ? 300 : 400;
         break;
       case "portfolio":
-        this.targetSpotlightRadius = 350;
+        this.targetSpotlightRadius = this.isMobile ? 275 : 350;
         break;
       case "contact":
-        this.targetSpotlightRadius = 375;
+        this.targetSpotlightRadius = this.isMobile ? 290 : 375;
         break;
       default:
-        this.targetSpotlightRadius = 350;
+        this.targetSpotlightRadius = this.isMobile ? 275 : 350;
     }
   }
 
@@ -596,7 +637,7 @@ class GlobalSpotlightBackground {
       );
       mainGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
     } else {
-      // Light theme - darker grey spotlight for all sections (same as portfolio)
+      // Light theme - darker grey spotlight for all sections
       const baseOpacity = 0.3;
       const opacity = baseOpacity * this.fadeAlpha;
       const baseGray = 40; // Same gray value for all sections
@@ -803,5 +844,5 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 console.log(
-  "Enhanced portfolio website with seamless spotlight loaded successfully!"
+  "Enhanced portfolio website with mobile-friendly spotlight loaded successfully!"
 );
