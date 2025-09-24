@@ -624,7 +624,7 @@ body {
   .cursor-interactive {
     cursor: none;
   }
-  
+
   .custom-cursor {
     position: fixed;
     width: 20px;
@@ -653,7 +653,7 @@ body {
   .custom-cursor {
     display: none;
   }
-  
+
   .cursor-interactive {
     cursor: auto;
   }
